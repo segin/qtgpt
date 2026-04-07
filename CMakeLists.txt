@@ -46,11 +46,9 @@ qt_add_executable(QtGPT
 
 # Include directories
 target_include_directories(QtGPT PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
     /usr/include
-    /usr/include/cjson
-    /usr/include/curl
-    /usr/include/disasterparty
 )
 
 # Target properties
