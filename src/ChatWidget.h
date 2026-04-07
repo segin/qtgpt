@@ -54,15 +54,16 @@ public:
     void renderHistory(const QVector<QMap<QString, QString>> &history);
     void scrollToBottom();
 
-public slots:
+ public:
+    void show();
+    void hide();
+
+  public slots:
     void sendMessage();
     void sendToolResult(const QString &tool_call_json, int tool_call_id);
     void attachImageRequested();
 
-public:
-    void show();
-
-private:
+  private:
     QScrollArea *m_scrollArea;
     QWidget *m_messagesContainer;
     QTextEdit *m_inputWidget;

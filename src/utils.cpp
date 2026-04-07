@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <QStandardPaths>
 #include <QFile>
-#include <QTextCodec>
+#include <QDir>
 #include <QByteArray>
 
 QString Utils::getConfigPath(const QString &filename)
@@ -123,7 +123,7 @@ QString Utils::escapeJson(const QString &str)
 {
     QString escaped;
     for (QChar c : str) {
-        switch (c) {
+        switch (c.unicode()) {
             case '"': escaped += "\\\""; break;
             case '\\': escaped += "\\\\"; break;
             case '\n': escaped += "\\n"; break;
@@ -141,7 +141,7 @@ QString Utils::unescapeJson(const QString &str)
     bool escaped = false;
     for (int i = 0; i < str.size(); ++i) {
         if (escaped) {
-            switch (str[i]) {
+            switch (str[i].unicode()) {
                 case '"': unescaped += '"'; break;
                 case '\\': unescaped += '\\'; break;
                 case 'n': unescaped += '\n'; break;

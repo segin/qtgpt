@@ -196,3 +196,8 @@ void QtGPT::clearChatHistory()
     m_chatHistory.clear();
     m_mutex.unlock();
 }
+
+void QtGPT::loadPlugins()
+{
+    m_pluginManager->loadPlugins(m_pluginDirectory);
+}

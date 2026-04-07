@@ -15,9 +15,9 @@ public:
     virtual ~Plugin();
 
     // Plugin interface
-    virtual const char *plugin_name() const = 0;
-    virtual const char *plugin_description() const = 0;
-    virtual const char *plugin_version() const = 0;
+    virtual const char *plugin_name() const;
+    virtual const char *plugin_description() const;
+    virtual const char *plugin_version() const;
     virtual bool load();
     virtual bool unload();
     virtual void initialize();

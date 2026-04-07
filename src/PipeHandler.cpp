@@ -2,6 +2,7 @@
 #include "PipeHandler.h"
 #include <unistd.h>
 #include <QByteArray>
+#include <QString>
 
 PipeHandler::PipeHandler(QObject *parent)
     : QObject(parent)
@@ -49,15 +50,15 @@ void PipeHandler::startEventLoop()
     m_running = true;
 }
 
-void PipeHandler::sendMessage(MessageType type, const QString &data, int tool_call_id, int tool_call_idx)
+void PipeHandler::sendMessage(MessageType type, const QByteArray &data, int tool_call_id, int tool_call_idx)
 {
     m_mutex.lock();
     PipeMessage msg;
-    msg.type = static_cast<int>(type);
-    msg.data = data.toUtf8();
+    msg.type = static_cast<MessageType>(type);
+    msg.data = data;
     msg.tool_call_id = tool_call_id;
     msg.tool_call_idx = tool_call_idx;
-    ssize_t written = write(m_writeFd, &msg, sizeof(msg));
+    ssize_t written = ::write(m_writeFd, &msg, sizeof(msg));
     m_mutex.unlock();
     if (written < 0) {
         // Handle error
@@ -67,8 +68,8 @@ void PipeHandler::sendMessage(MessageType type, const QString &data, int tool_ca
 void PipeHandler::handlePipeInput()
 {
     PipeMessage msg;
-    ssize_t read = read(m_fd[0], &msg, sizeof(msg));
-    if (read > 0) {
+    ssize_t bytes_read = ::read(m_fd[0], &msg, sizeof(msg));
+    if (bytes_read > 0) {
         emit pipeMessageReceived(msg);
         
         switch (msg.type) {

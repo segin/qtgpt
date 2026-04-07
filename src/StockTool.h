@@ -4,10 +4,8 @@
 #include "Tool.h"
 
 class StockTool : public Tool
-{
-    Q_OBJECT
-
-public:
+    {
+    public:
     explicit StockTool(QObject *parent = nullptr);
     ~StockTool();
 

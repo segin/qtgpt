@@ -5,13 +5,14 @@
 #include <QList>
 #include <QDir>
 
-class Plugin;
-class Tool;
+ class Plugin;
+    class Tool;
 
-class PluginManager
-{
-public:
-    explicit PluginManager(QObject *parent = nullptr);
+    class PluginManager : public QObject
+    {
+        Q_OBJECT
+    public:
+        explicit PluginManager(QObject *parent = nullptr);
     ~PluginManager();
 
     // Plugin management

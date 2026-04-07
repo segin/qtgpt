@@ -4,10 +4,8 @@
 #include "Tool.h"
 
 class WeatherTool : public Tool
-{
-    Q_OBJECT
-
-public:
+    {
+    public:
     explicit WeatherTool(QObject *parent = nullptr);
     ~WeatherTool();
 

@@ -5,9 +5,24 @@
 #include <QDir>
 
 Plugin::Plugin(const QString &plugin_path)
+    : m_pluginPath(plugin_path)
 {
-    m_pluginPath = plugin_path;
     m_library = nullptr;
+}
+
+const char *Plugin::plugin_name() const
+{
+    return "Plugin";
+}
+
+const char *Plugin::plugin_description() const
+{
+    return "Generic plugin";
+}
+
+const char *Plugin::plugin_version() const
+{
+    return "1.0.0";
 }
 
 Plugin::~Plugin()

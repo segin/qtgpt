@@ -4,11 +4,12 @@
 #include "Tool.h"
 #include "WeatherTool.h"
 #include "StockTool.h"
+#include <QDir>
 
 PluginManager::PluginManager(QObject *parent)
     : QObject(parent)
 {
-    m_pluginDirectory = Utils::getUserConfigDir() + "/plugins";
+    m_pluginDirectory = QString("/home/segin/.config/qtgpt/plugins");
     m_pluginDir = m_pluginDirectory;
 }
 
@@ -34,7 +35,7 @@ bool PluginManager::loadPlugins(const QString &plugin_dir)
     QStringList plugin_files = dir.entryList();
     
     for (const QString &file : plugin_files) {
-        Plugin *plugin = new Plugin(m_pluginDir + "/" + file);
+        Plugin *plugin = new Plugin(m_pluginDir.filePath(file));
         if (plugin->load()) {
             m_plugins.append(plugin);
             for (Tool *tool : plugin->tools()) {
