@@ -27,8 +27,8 @@ if(NOT DISASTERPARTY_LIBRARY)
     message(WARNING "libdisasterparty library not found - compilation will fail")
 endif()
 
-# Source files
-set(SOURCES
+# Create executable (Qt6 macro)
+qt_add_executable(QtGPT
     main.cpp
     QtGPT.cpp
     ChatWidget.cpp
@@ -40,9 +40,6 @@ set(SOURCES
     WeatherTool.cpp
     StockTool.cpp
     utils.cpp
-)
-
-set(HEADERS
     QtGPT.h
     ChatWidget.h
     PipeHandler.h
@@ -55,12 +52,6 @@ set(HEADERS
     utils.h
     PipeMessage.h
     SettingsDialog.h
-)
-
-# Create executable
-qt_add_executable(QtGPT
-    ${SOURCES}
-    ${HEADERS}
 )
 
 # Include directories
