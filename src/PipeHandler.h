@@ -34,7 +34,7 @@ public:
 
     struct PipeMessage {
         MessageType type;
-        QString data;
+        QByteArray data;
         int tool_call_id;
         int tool_call_idx;
     };
@@ -46,7 +46,7 @@ public:
     void startEventLoop();
 
     // Thread-safe write to pipe
-    void sendMessage(MessageType type, const QString &data = QString(), int tool_call_id = -1, int tool_call_idx = -1);
+    void sendMessage(MessageType type, const QByteArray &data = QByteArray(), int tool_call_id = -1, int tool_call_idx = -1);
 
 signals:
     void tokenReceived(const QString &token);

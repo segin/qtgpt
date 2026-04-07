@@ -1,5 +1,7 @@
 // Pipe handler for async communication (stub)
 #include "PipeHandler.h"
+#include <unistd.h>
+#include <QByteArray>
 
 PipeHandler::PipeHandler(QObject *parent)
     : QObject(parent)
