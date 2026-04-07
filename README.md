@@ -68,6 +68,21 @@ qtgpt/
 - libcurl
 - libcjson
 
+## Build Instructions
+
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
+
+Note: The build requires the following libraries to be installed:
+- libdisasterparty (development headers)
+- libcurl (development headers)
+- libcjson (development headers)
+
+If these libraries are not installed, the build will fail at the header include stage.
+
 ## TODO
 
 - Implement ChatWidget.cpp with full UI
