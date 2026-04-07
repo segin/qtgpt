@@ -1,6 +1,7 @@
 #include "QtGPT.h"
 #include "PipeHandler.h"
 #include "PluginManager.h"
+#include "utils.h"
 #include <QCoreApplication>
 
 QtGPT *QtGPT::s_instance = nullptr;
