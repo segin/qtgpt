@@ -29,29 +29,29 @@ endif()
 
 # Create executable (Qt6 macro)
 qt_add_executable(QtGPT
-    main.cpp
-    QtGPT.cpp
-    ChatWidget.cpp
-    PipeHandler.cpp
-    ThreadWorker.cpp
-    PluginManager.cpp
-    Plugin.cpp
-    Tool.cpp
-    WeatherTool.cpp
-    StockTool.cpp
-    utils.cpp
-    QtGPT.h
-    ChatWidget.h
-    PipeHandler.h
-    ThreadWorker.h
-    PluginManager.h
-    Plugin.h
-    Tool.h
-    WeatherTool.h
-    StockTool.h
-    utils.h
-    PipeMessage.h
-    SettingsDialog.h
+    src/main.cpp
+    src/QtGPT.cpp
+    src/ChatWidget.cpp
+    src/PipeHandler.cpp
+    src/ThreadWorker.cpp
+    src/PluginManager.cpp
+    src/Plugin.cpp
+    src/Tool.cpp
+    src/WeatherTool.cpp
+    src/StockTool.cpp
+    src/utils.cpp
+    src/QtGPT.h
+    src/ChatWidget.h
+    src/PipeHandler.h
+    src/ThreadWorker.h
+    src/PluginManager.h
+    src/Plugin.h
+    src/Tool.h
+    src/WeatherTool.h
+    src/StockTool.h
+    src/utils.h
+    src/PipeMessage.h
+    src/SettingsDialog.h
 )
 
 # Include directories
