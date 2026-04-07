@@ -195,26 +195,3 @@ void QtGPT::clearChatHistory()
     m_chatHistory.clear();
     m_mutex.unlock();
 }
-
-// Forward declarations for utils
-class Utils;
-QString Utils::getConfigPath(const QString &filename) { return QString(); }
-QString Utils::getCachePath(const QString &filename) { return QString(); }
-bool Utils::ensureConfigDirExists() { return true; }
-QString Utils::getUserConfigDir() { return QString(); }
-QString Utils::base64Encode(const QByteArray &data) { return QString(); }
-QByteArray Utils::base64Decode(const QString &data) { return QByteArray(); }
-bool Utils::readFileToBuffer(const QString &path, QByteArray &buffer, qint64 &size) { return false; }
-QString Utils::readFileToString(const QString &path) { return QString(); }
-QString Utils::getImageMimeType(const QByteArray &data) { return QString(); }
-bool Utils::isImageSupported(const QString &mime) { return false; }
-QString Utils::serializeMessages(const QStringList &messages) { return QString(); }
-QStringList Utils::deserializeMessages(const QString &json) { return QStringList(); }
-QString Utils::escapeJson(const QString &str) { return QString(); }
-QString Utils::unescapeJson(const QString &str) { return QString(); }
-QString Utils::generateSystemPrompt(const QString &custom_prompt, const QString &system_prompt, bool append_tools) { return QString(); }
-QString Utils::generateDefaultSystemPrompt() { return QString(); }
-int Utils::countTokens(const QString &text) { return 0; }
-bool Utils::isValidModelName(const QString &model) { return true; }
-bool Utils::isValidApiKey(const QString &key) { return !key.isEmpty(); }
-QString Utils::mapMimeType(const QString &extension) { return QString(); }
