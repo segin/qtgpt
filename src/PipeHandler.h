@@ -45,20 +45,20 @@ public:
     // Add handler for Qt event loop
     void startEventLoop();
 
-    // Thread-safe write to pipe
+// Thread-safe write to pipe
     void sendMessage(MessageType type, const QByteArray &data = QByteArray(), int tool_call_id = -1, int tool_call_idx = -1);
 
-public:
-    void tokenReceived(const QString &token) const;
-    void thinkingStarted() const;
-    void thinkingEnded() const;
-    void streamEnded() const;
-    void errorReceived(const QString &error) const;
-    void toolResultReceived(int tool_call_id, int tool_call_idx, const QString &result) const;
-    void modelListItemReceived(const QString &model) const;
-    void modelListEnded() const;
-    void modelListError(const QString &error) const;
-    void pipeMessageReceived(const PipeMessage &message) const;
+    Q_SIGNALS:
+    void tokenReceived(const QString &token);
+    void thinkingStarted();
+    void thinkingEnded();
+    void streamEnded();
+    void errorReceived(const QString &error);
+    void toolResultReceived(int tool_call_id, int tool_call_idx, const QString &result);
+    void modelListItemReceived(const QString &model);
+    void modelListEnded();
+    void modelListError(const QString &error);
+    void pipeMessageReceived(const PipeMessage &message);
 
 private:
     int m_fd[2];

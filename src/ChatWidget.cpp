@@ -194,3 +194,8 @@ void ChatWidget::handleImageRemove()
 {
     detachImage();
 }
+
+void ChatWidget::show()
+{
+    QWidget::show();
+}

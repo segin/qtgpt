@@ -5,18 +5,6 @@
 #include <QString>
 #include <QSocketNotifier>
 
-// Empty implementations for const methods
-void PipeHandler::tokenReceived(const QString &token) const {}
-void PipeHandler::thinkingStarted() const {}
-void PipeHandler::thinkingEnded() const {}
-void PipeHandler::streamEnded() const {}
-void PipeHandler::errorReceived(const QString &error) const {}
-void PipeHandler::toolResultReceived(int tool_call_id, int tool_call_idx, const QString &result) const {}
-void PipeHandler::modelListItemReceived(const QString &model) const {}
-void PipeHandler::modelListEnded() const {}
-void PipeHandler::modelListError(const QString &error) const {}
-void PipeHandler::pipeMessageReceived(const PipeMessage &message) const {}
-
 PipeHandler::PipeHandler(QObject *parent)
     : QObject(parent)
 {

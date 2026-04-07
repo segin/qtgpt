@@ -9,12 +9,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Qt6
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# Find dependencies using pkg-config
+# Find dependencies using pkg-config and find_library
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(CURL REQUIRED libcurl)
-pkg_check_modules(DISASTERPARTY REQUIRED disasterparty)
+
+find_library(DISASTERPARTY_LIBRARY NAMES disasterparty REQUIRED)
+
+# Enable auto-MOC
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # Create executable (Qt6 macro)
 qt_add_executable(QtGPT
@@ -29,6 +34,7 @@ qt_add_executable(QtGPT
     src/WeatherTool.cpp
     src/StockTool.cpp
     src/utils.cpp
+    src/SettingsDialog.cpp
     src/QtGPT.h
     src/ChatWidget.h
     src/PipeHandler.h
@@ -49,22 +55,23 @@ target_include_directories(QtGPT PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CJSON_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
-    ${DISASTERPARTY_INCLUDE_DIRS}
+    /usr/include
+    /usr/include/disasterparty
 )
 
 # Target properties
 target_compile_features(QtGPT PRIVATE cxx_std_17)
 
-# Link libraries
+# Link libraries (order matters)
 target_link_libraries(QtGPT PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${CJSON_LIBRARIES}
-    ${CURL_LIBRARIES}
-    ${DISASTERPARTY_LIBRARIES}
-    pthread
+    /usr/lib/libdisasterparty.so
     dl
+    pthread
+    /usr/lib/libcjson.so
+    /usr/lib/libcurl.so
 )
 
 # Install

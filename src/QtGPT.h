@@ -6,7 +6,7 @@
 #include <QMutex>
 #include <QMap>
 #include <QThread>
-#include <disasterparty.h>
+#include "disasterparty_wrapper.h"
 
 class PipeHandler;
 class PluginManager;
@@ -14,10 +14,8 @@ class SettingsDialog;
 class ChatWidget;
 
 class QtGPT : public QObject
-{
-    Q_OBJECT
-
-public:
+    {
+    public:
     explicit QtGPT(QObject *parent = nullptr);
     ~QtGPT();
 
@@ -48,6 +46,7 @@ public:
     bool enterSendsMessage() const { return m_enterSendsMessage; }
 
     // Configuration
+    public:
     void setGeminiApiKey(const QString &key);
     void setGeminiModel(const QString &model);
     void setOpenaiApiKey(const QString &key);

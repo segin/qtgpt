@@ -88,6 +88,10 @@ void QtGPT::destroyContext()
     m_mutex.unlock();
 }
 
+// Signal stubs
+void QtGPT::chatMessageAdded() { Q_EMIT chatMessageAdded(); }
+void QtGPT::settingsChanged() { Q_EMIT settingsChanged(); }
+
 void QtGPT::setGeminiApiKey(const QString &key)
 {
     m_geminiApiKey = key;

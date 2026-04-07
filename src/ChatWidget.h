@@ -57,6 +57,7 @@ public:
  public:
     void show();
     void hide();
+    void close();
 
   public slots:
     void sendMessage();
@@ -91,8 +92,7 @@ public:
     void initUI();
     void createMessageWidget();
 
-    // Slot declarations
-    public slots:
+  public slots:
     void handleSend();
     void handleImageAttach();
     void handleImageRemove();
