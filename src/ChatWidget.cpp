@@ -1,4 +1,5 @@
 #include "ChatWidget.h"
+#include <QScrollBar>
 
 ChatWidget::ChatWidget(QWidget *parent)
     : QWidget(parent)

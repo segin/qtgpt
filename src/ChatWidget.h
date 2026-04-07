@@ -86,8 +86,15 @@ private:
     QHBoxLayout *m_inputLayout;
 
     // Initialize UI components
+    public:
     void initUI();
     void createMessageWidget();
+
+    // Slot declarations
+    public slots:
+    void handleSend();
+    void handleImageAttach();
+    void handleImageRemove();
 };
 
 #endif // CHATWIDGET_H
