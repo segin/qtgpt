@@ -167,7 +167,15 @@ void ChatWidget::scrollToBottom()
 
 void ChatWidget::sendMessage()
 {
-    emit sendMessage();
+    if (!isEmptyInput()) {
+        QString text = getInputText();
+        detachImage();
+        m_messageLayout->addWidget(new QLabel("<b>User:</b> " + text));
+        setInputText("");
+        m_sendButton->setEnabled(true);
+        scrollToBottom();
+        emit sendMessageSignal(text);
+    }
 }
 
 void ChatWidget::sendToolResult(const QString &tool_call_json, int tool_call_id)

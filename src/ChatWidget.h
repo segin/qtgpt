@@ -59,6 +59,11 @@ public:
     void hide();
     void close();
 
+  signals:
+    void sendMessageSignal(const QString &text);
+    void sendToolResultSignal(const QString &tool_call_json, int tool_call_id);
+    void attachImageRequestedSignal();
+
   public slots:
     void sendMessage();
     void sendToolResult(const QString &tool_call_json, int tool_call_id);
