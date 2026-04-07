@@ -12,10 +12,20 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 # Find dependencies using pkg-config and find_library
 find_package(PkgConfig REQUIRED)
 
-# Check for required packages
-pkg_check_modules(CJSON REQUIRED cjson)
-pkg_check_modules(CURL REQUIRED libcurl)
-pkg_check_modules(DISASTERPARTY REQUIRED disasterparty)
+# Check for required packages using find_library
+find_library(CJSON_LIBRARY NAMES cjson NAMES_JSON cJSON)
+find_library(CURL_LIBRARY NAMES CURL libcurl)
+find_library(DISASTERPARTY_LIBRARY NAMES disasterparty)
+
+if(NOT CJSON_LIBRARY)
+    message(FATAL_ERROR "cjson library not found")
+endif()
+if(NOT CURL_LIBRARY)
+    message(FATAL_ERROR "libcurl library not found")
+endif()
+if(NOT DISASTERPARTY_LIBRARY)
+    message(FATAL_ERROR "libdisasterparty library not found")
+endif()
 
 # Source files
 set(SOURCES
@@ -56,9 +66,10 @@ qt_add_executable(QtGPT
 # Include directories
 target_include_directories(QtGPT PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CJSON_INCLUDE_DIRS}
-    ${CURL_INCLUDE_DIRS}
-    ${DISASTERPARTY_INCLUDE_DIRS}
+    /usr/include
+    /usr/include/cjson
+    /usr/include/curl
+    /usr/include/disasterparty
 )
 
 # Target properties
@@ -69,9 +80,11 @@ target_link_libraries(QtGPT PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${CJSON_LIBRARIES}
-    ${CURL_LIBRARIES}
-    ${DISASTERPARTY_LIBRARIES}
+    ${CJSON_LIBRARY}
+    ${CURL_LIBRARY}
+    ${DISASTERPARTY_LIBRARY}
+    pthread
+    dl
 )
 
 # Install
