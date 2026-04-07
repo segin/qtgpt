@@ -63,6 +63,7 @@ signals:
 private:
     int m_fd[2];
     int m_writeFd;
+    bool m_running;
     QSocketNotifier *m_notifier;
     QMutex m_mutex;
 
