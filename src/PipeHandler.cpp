@@ -3,6 +3,19 @@
 #include <unistd.h>
 #include <QByteArray>
 #include <QString>
+#include <QSocketNotifier>
+
+// Empty implementations for const methods
+void PipeHandler::tokenReceived(const QString &token) const {}
+void PipeHandler::thinkingStarted() const {}
+void PipeHandler::thinkingEnded() const {}
+void PipeHandler::streamEnded() const {}
+void PipeHandler::errorReceived(const QString &error) const {}
+void PipeHandler::toolResultReceived(int tool_call_id, int tool_call_idx, const QString &result) const {}
+void PipeHandler::modelListItemReceived(const QString &model) const {}
+void PipeHandler::modelListEnded() const {}
+void PipeHandler::modelListError(const QString &error) const {}
+void PipeHandler::pipeMessageReceived(const PipeMessage &message) const {}
 
 PipeHandler::PipeHandler(QObject *parent)
     : QObject(parent)
@@ -70,33 +83,33 @@ void PipeHandler::handlePipeInput()
     PipeMessage msg;
     ssize_t bytes_read = ::read(m_fd[0], &msg, sizeof(msg));
     if (bytes_read > 0) {
-        emit pipeMessageReceived(msg);
+        pipeMessageReceived(msg);
         
         switch (msg.type) {
             case PIPE_MSG_TOKEN:
-                emit tokenReceived(QString::fromUtf8(msg.data));
+                tokenReceived(QString::fromUtf8(msg.data));
                 break;
             case PIPE_MSG_THINKING:
-                emit thinkingStarted();
+                thinkingStarted();
                 break;
             case PIPE_MSG_STREAM_END:
-                emit thinkingEnded();
-                emit streamEnded();
+                thinkingEnded();
+                streamEnded();
                 break;
             case PIPE_MSG_ERROR:
-                emit errorReceived(QString::fromUtf8(msg.data));
+                errorReceived(QString::fromUtf8(msg.data));
                 break;
             case PIPE_MSG_TOOL_RESULT:
-                emit toolResultReceived(msg.tool_call_id, msg.tool_call_idx, QString::fromUtf8(msg.data));
+                toolResultReceived(msg.tool_call_id, msg.tool_call_idx, QString::fromUtf8(msg.data));
                 break;
             case PIPE_MSG_MODEL_LIST_ITEM:
-                emit modelListItemReceived(QString::fromUtf8(msg.data));
+                modelListItemReceived(QString::fromUtf8(msg.data));
                 break;
             case PIPE_MSG_MODEL_LIST_END:
-                emit modelListEnded();
+                modelListEnded();
                 break;
             case PIPE_MSG_MODEL_LIST_ERROR:
-                emit modelListError(QString::fromUtf8(msg.data));
+                modelListError(QString::fromUtf8(msg.data));
                 break;
         }
     }
