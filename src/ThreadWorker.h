@@ -8,8 +8,6 @@
 
 class ThreadWorker : public QObject
 {
-    Q_OBJECT
-
 public:
     explicit ThreadWorker(QObject *parent = nullptr);
     virtual ~ThreadWorker();
