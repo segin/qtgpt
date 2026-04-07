@@ -1,0 +1,26 @@
+# Qt build files
+*.o
+*.a
+*.lib
+*.exe
+
+# Qt project files
+*.pro.user
+
+# IDE files
+*.kdevelop
+*.workspace
+*.project
+.vscode/
+.idea/
+
+# Build directory
+build/
+
+# Logs
+*.log
+*.tmp
+
+# Environment files
+.env
+*.env
