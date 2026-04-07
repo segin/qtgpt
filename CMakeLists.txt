@@ -9,13 +9,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Qt6
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-# Find dependencies using pkg-config and find_library
+# Find dependencies using pkg-config
 find_package(PkgConfig REQUIRED)
 
-# Check for required packages using find_library
-find_library(CJSON_LIBRARY cjson)
-find_library(CURL_LIBRARY CURL)
-find_library(DISASTERPARTY_LIBRARY disasterparty)
+pkg_check_modules(CJSON REQUIRED libcjson)
+pkg_check_modules(CURL REQUIRED libcurl)
+pkg_check_modules(DISASTERPARTY REQUIRED disasterparty)
 
 # Create executable (Qt6 macro)
 qt_add_executable(QtGPT
@@ -48,42 +47,25 @@ qt_add_executable(QtGPT
 target_include_directories(QtGPT PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}
-    /usr/include
+    ${CJSON_INCLUDE_DIRS}
+    ${CURL_INCLUDE_DIRS}
+    ${DISASTERPARTY_INCLUDE_DIRS}
 )
 
 # Target properties
 target_compile_features(QtGPT PRIVATE cxx_std_17)
 
-# Link libraries (conditionally)
+# Link libraries
 target_link_libraries(QtGPT PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    ${CJSON_LIBRARIES}
+    ${CURL_LIBRARIES}
+    ${DISASTERPARTY_LIBRARIES}
+    pthread
+    dl
 )
-
-if(CJSON_LIBRARY)
-    target_link_libraries(QtGPT PRIVATE ${CJSON_LIBRARY})
-endif()
-
-if(CURL_LIBRARY)
-    target_link_libraries(QtGPT PRIVATE ${CURL_LIBRARY})
-endif()
-
-if(DISASTERPARTY_LIBRARY)
-    target_link_libraries(QtGPT PRIVATE ${DISASTERPARTY_LIBRARY})
-endif()
-
-# Link pthread and dl
-find_library(PTHREAD_LIBRARIES pthread)
-find_library(DL_LIBRARIES dl)
-
-if(PTHREAD_LIBRARIES)
-    target_link_libraries(QtGPT PRIVATE ${PTHREAD_LIBRARIES})
-endif()
-
-if(DL_LIBRARIES)
-    target_link_libraries(QtGPT PRIVATE ${DL_LIBRARIES})
-endif()
 
 # Install
 install(TARGETS QtGPT
