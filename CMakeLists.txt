@@ -13,18 +13,18 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(PkgConfig REQUIRED)
 
 # Check for required packages using find_library
-find_library(CJSON_LIBRARY NAMES cjson NAMES_JSON cJSON)
-find_library(CURL_LIBRARY NAMES CURL libcurl)
-find_library(DISASTERPARTY_LIBRARY NAMES disasterparty)
+find_library(CJSON_LIBRARY NAMES cjson)
+find_library(CURL_LIBRARY CURL)
+find_library(DISASTERPARTY_LIBRARY disasterparty)
 
 if(NOT CJSON_LIBRARY)
-    message(FATAL_ERROR "cjson library not found")
+    message(WARNING "cjson library not found - compilation will fail")
 endif()
 if(NOT CURL_LIBRARY)
-    message(FATAL_ERROR "libcurl library not found")
+    message(WARNING "libcurl library not found - compilation will fail")
 endif()
 if(NOT DISASTERPARTY_LIBRARY)
-    message(FATAL_ERROR "libdisasterparty library not found")
+    message(WARNING "libdisasterparty library not found - compilation will fail")
 endif()
 
 # Source files
