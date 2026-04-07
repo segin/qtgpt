@@ -13,19 +13,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 find_package(PkgConfig REQUIRED)
 
 # Check for required packages using find_library
-find_library(CJSON_LIBRARY NAMES cjson)
+find_library(CJSON_LIBRARY cjson)
 find_library(CURL_LIBRARY CURL)
 find_library(DISASTERPARTY_LIBRARY disasterparty)
-
-if(NOT CJSON_LIBRARY)
-    message(WARNING "cjson library not found - compilation will fail")
-endif()
-if(NOT CURL_LIBRARY)
-    message(WARNING "libcurl library not found - compilation will fail")
-endif()
-if(NOT DISASTERPARTY_LIBRARY)
-    message(WARNING "libdisasterparty library not found - compilation will fail")
-endif()
 
 # Create executable (Qt6 macro)
 qt_add_executable(QtGPT
@@ -66,17 +56,36 @@ target_include_directories(QtGPT PRIVATE
 # Target properties
 target_compile_features(QtGPT PRIVATE cxx_std_17)
 
-# Link libraries
+# Link libraries (conditionally)
 target_link_libraries(QtGPT PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
-    ${CJSON_LIBRARY}
-    ${CURL_LIBRARY}
-    ${DISASTERPARTY_LIBRARY}
-    pthread
-    dl
 )
+
+if(CJSON_LIBRARY)
+    target_link_libraries(QtGPT PRIVATE ${CJSON_LIBRARY})
+endif()
+
+if(CURL_LIBRARY)
+    target_link_libraries(QtGPT PRIVATE ${CURL_LIBRARY})
+endif()
+
+if(DISASTERPARTY_LIBRARY)
+    target_link_libraries(QtGPT PRIVATE ${DISASTERPARTY_LIBRARY})
+endif()
+
+# Link pthread and dl
+find_library(PTHREAD_LIBRARIES pthread)
+find_library(DL_LIBRARIES dl)
+
+if(PTHREAD_LIBRARIES)
+    target_link_libraries(QtGPT PRIVATE ${PTHREAD_LIBRARIES})
+endif()
+
+if(DL_LIBRARIES)
+    target_link_libraries(QtGPT PRIVATE ${DL_LIBRARIES})
+endif()
 
 # Install
 install(TARGETS QtGPT
