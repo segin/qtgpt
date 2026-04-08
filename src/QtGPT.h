@@ -6,28 +6,33 @@
 #include <QMutex>
 #include <QMap>
 #include <QThread>
+#include <QTextStream>
 #include "disasterparty_wrapper.h"
+#include "ChatWidget.h"
 
 class PipeHandler;
 class PluginManager;
 class SettingsDialog;
-class ChatWidget;
 
 class QtGPT : public QObject
     {
+    Q_OBJECT
     public:
-    explicit QtGPT(QObject *parent = nullptr);
+    QtGPT(QObject *parent = nullptr);
     ~QtGPT();
 
     static QtGPT *instance();
 
     // Pipe handler for async communication
+    public:
     PipeHandler *pipeHandler() const { return m_pipeHandler; }
 
     // Plugin manager for tools
+    public:
     PluginManager *pluginManager() const { return m_pluginManager; }
 
     // Disasterparty context
+    public:
     dp_context_t *context() const { return m_dpContext; }
 
     // Settings
@@ -61,6 +66,10 @@ class QtGPT : public QObject
     void setAppendSystemPrompt(bool enable);
     void setEnterSendsMessage(bool enable);
 
+    // Settings persistence
+    bool loadSettings();
+    bool saveSettings();
+
     // Initialization
     public:
     void initContext();
@@ -80,10 +89,46 @@ class QtGPT : public QObject
     // Settings dialog
     void setSettingsDialog(SettingsDialog *widget) { m_settingsDialog = widget; }
     SettingsDialog *settingsDialog() const { return m_settingsDialog; }
+    SettingsDialog *m_settingsDialog;
+
+    // Model lists
+    public:
+    const QList<QString>& geminiModelList() const { return m_geminiModelList; }
+    const QList<QString>& openaiModelList() const { return m_openaiModelList; }
+    const QList<QString>& anthropicModelList() const { return m_anthropicModelList; }
+
+    void setGeminiModelList(const QList<QString> &list) { m_geminiModelList = list; }
+    void setOpenaiModelList(const QList<QString> &list) { m_openaiModelList = list; }
+    void setAnthropicModelList(const QList<QString> &list) { m_anthropicModelList = list; }
+
+  private:
+    QList<QString> m_geminiModelList;
+    QList<QString> m_openaiModelList;
+    QList<QString> m_anthropicModelList;
 
 signals:
     void chatMessageAdded();
     void settingsChanged();
+    void GetModels(dp_provider_type_t provider, const QString &api_key);
+    void UseSelectedModel(dp_provider_type_t provider, const QString &model);
+    void ApplySettings();
+    void CancelSettings();
+    void PopulateSettings();
+    void HistoryLimitsToggled(bool checked);
+    void EnterSendsChanged(bool checked);
+    void AppendPromptChanged(bool checked);
+    void clearChatSignal();
+
+public slots:
+    void loadSettingsSlot();
+    void discardChangesSlot();
+    void openConversationSlot();
+    void saveConversationSlot();
+    void openSettingsSlot();
+    void quitSlot();
+    void retryRequestedSlot(int index);
+    void editRequestedSlot(int index, const QString &text);
+    void clearChatSlot();
 
 private:
     static QtGPT *s_instance;
@@ -91,7 +136,6 @@ private:
     PluginManager *m_pluginManager;
     dp_context_t *m_dpContext;
     ChatWidget *m_mainWindow;
-    SettingsDialog *m_settingsDialog;
 
     // Configuration
     dp_provider_type_t m_provider;

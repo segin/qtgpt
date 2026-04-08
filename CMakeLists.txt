@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
 
 # Find dependencies using pkg-config and find_library
 find_package(PkgConfig REQUIRED)
@@ -26,6 +26,8 @@ qt_add_executable(QtGPT
     src/main.cpp
     src/QtGPT.cpp
     src/ChatWidget.cpp
+    src/ChatHistoryViewer.cpp
+    src/MenuBar.cpp
     src/PipeHandler.cpp
     src/ThreadWorker.cpp
     src/PluginManager.cpp
@@ -37,6 +39,8 @@ qt_add_executable(QtGPT
     src/SettingsDialog.cpp
     src/QtGPT.h
     src/ChatWidget.h
+    src/ChatHistoryViewer.h
+    src/MenuBar.h
     src/PipeHandler.h
     src/ThreadWorker.h
     src/PluginManager.h
@@ -67,6 +71,7 @@ target_link_libraries(QtGPT PRIVATE
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets
+    Qt6::Network
     /usr/lib/libdisasterparty.so
     dl
     pthread

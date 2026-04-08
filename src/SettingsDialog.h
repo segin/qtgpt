@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QTabWidget>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLineEdit>
 #include <QComboBox>
 #include <QTextEdit>
@@ -11,15 +12,21 @@
 #include <QPushButton>
 #include <QCheckBox>
 #include <QListWidget>
-#include <QListWidgetItem>
+#include <QLabel>
+#include <QScrollArea>
+#include <QGroupBox>
+#include <QRadioButton>
 #include <disasterparty.h>
+#include <disasterparty_wrapper.h>
+
+class QtGPT;
 
 class SettingsDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit SettingsDialog(QWidget *parent = nullptr);
+    SettingsDialog(QWidget *parent = nullptr);
     ~SettingsDialog();
 
     // Show/hide dialog
@@ -31,78 +38,113 @@ public:
     bool applySettings();
     void cancelSettings();
 
+    // Populate with current settings
+    void populateSettings();
+
     // Model loading
     void loadModelList(dp_provider_type_t provider, const QString &api_key);
     void clearModelList();
 
-private slots:
+    // Current settings
+    dp_provider_type_t currentProvider() const;
+    QString geminiApiKey() const;
+    QString geminiModel() const;
+    QString openaiApiKey() const;
+    QString openaiModel() const;
+    QString openaiBaseUrl() const;
+    QString anthropicApiKey() const;
+    QString anthropicModel() const;
+    int maxHistoryMessages() const;
+    QString systemPrompt() const;
+    bool appendSystemPrompt() const;
+    bool enterSendsMessage() const;
+    bool historyLimitsDisabled() const;
+
+    // Settings persistence
+    bool loadSettings();
+    bool saveSettings();
+
+signals:
+    void SettingsApplied();
+    void ProviderChanged(dp_provider_type_t provider);
+    void TabChanged(int index);
+    void GetModels(dp_provider_type_t provider, const QString &api_key);
+    void UseSelectedModel(dp_provider_type_t provider, const QString &model);
+    void HistoryLimitsToggled(bool checked);
+    void EnterSendsChanged(bool checked);
+    void AppendPromptChanged(bool checked);
+
+public slots:
     void onApply();
     void onCancel();
     void onProviderChanged(int index);
     void onTabChanged(int index);
-    void onGeminiModelChanged();
-    void onOpenAIModelChanged();
-    void onAnthropicModelChanged();
-    void onLoadModels();
-    void onUseModelSelected();
-    void onModelListError(const QString &error);
+    void onGeminiLoadModels();
+    void onOpenAILoadModels();
+    void onAnthropicLoadModels();
+    void onGeminiUseModel();
+    void onOpenAIUseModel();
+    void onAnthropicUseModel();
     void onHistoryLimitsToggled(bool checked);
-    void onEnterSendsToggled(bool checked);
-    void onAppendPromptToggled(bool checked);
+    void onEnterSendsChanged();
+    void onAppendPromptChanged();
+    void onConfigurePlugin();
+
+public:
+    QString m_currentProvider;
 
 private:
+    QListWidget *m_geminiModelList;
+    QListWidget *m_openaiModelList;
+    QListWidget *m_anthropicModelList;
     QTabWidget *m_tabWidget;
-    QWidget *m_generalTab;
-    QWidget *m_geminiTab;
-    QWidget *m_openaiTab;
-    QWidget *m_anthropicTab;
-    QWidget *m_systemPromptTab;
-    QWidget *m_historyTab;
-    QWidget *m_pluginsTab;
-
-    // Radio buttons for providers
-    QComboBox *m_providerComboBox;
-
-    // Gemini tab
-    QLineEdit *m_geminiApiKey;
-    QLineEdit *m_geminiModel;
-    QComboBox *m_geminiModelList;
-    QPushButton *m_loadGeminiModels;
-
-    // OpenAI tab
-    QLineEdit *m_openaiApiKey;
-    QLineEdit *m_openaiModel;
-    QLineEdit *m_openaiBaseUrl;
-    QComboBox *m_openaiModelList;
-    QPushButton *m_loadOpenAIModels;
-
-    // Anthropic tab
-    QLineEdit *m_anthropicApiKey;
-    QLineEdit *m_anthropicModel;
-    QComboBox *m_anthropicModelList;
-    QPushButton *m_loadAnthropicModels;
-
-    // System prompt tab
-    QTextEdit *m_systemPromptEdit;
-    QCheckBox *m_appendSystemPrompt;
-
-    // History tab
-    QSpinBox *m_historyLimit;
-    QCheckBox *m_historyLimitsDisabled;
-    QCheckBox *m_enterSendsMessage;
-    QCheckBox *m_appendDefaultSystemPrompt;
-
-    // Plugins tab
-    QLineEdit *m_pluginDirectory;
-    QPushButton *m_refreshPlugins;
-    QListWidget *m_pluginsList;
-
-    // Dialog buttons
+    QWidget *m_mainLayoutWidget;
     QPushButton *m_applyButton;
     QPushButton *m_cancelButton;
 
-    // Layouts
-    QVBoxLayout *m_mainLayout;
+    // General tab
+    QWidget *m_generalTab;
+    QGroupBox *m_providerGroup;
+    QComboBox *m_providerComboBox;
+    QGroupBox *m_historyGroup;
+    QSpinBox *m_historyLimitSpinBox;
+    QCheckBox *m_disableHistoryLimitCheckbox;
+    QCheckBox *m_enterSendsMessageCheckbox;
+    QCheckBox *m_appendSystemPromptCheckbox;
+    QTextEdit *m_systemPromptEdit;
+
+    // Gemini tab
+    QWidget *m_geminiTab;
+    QGroupBox *m_geminiConfigGroup;
+    QLineEdit *m_geminiApiKeyEdit;
+    QLineEdit *m_geminiModelEdit;
+    QPushButton *m_geminiLoadModelsButton;
+    QPushButton *m_geminiUseModelButton;
+
+    // OpenAI tab
+    QWidget *m_openaiTab;
+    QGroupBox *m_openaiConfigGroup;
+    QLineEdit *m_openaiApiKeyEdit;
+    QLineEdit *m_openaiModelEdit;
+    QLineEdit *m_openaiBaseUrlEdit;
+    QPushButton *m_openaiLoadModelsButton;
+    QPushButton *m_openaiUseModelButton;
+
+    // Anthropic tab
+    QWidget *m_anthropicTab;
+    QGroupBox *m_anthropicConfigGroup;
+    QLineEdit *m_anthropicApiKeyEdit;
+    QLineEdit *m_anthropicModelEdit;
+    QPushButton *m_anthropicLoadModelsButton;
+    QPushButton *m_anthropicUseModelButton;
+
+    // Plugins tab
+    QWidget *m_pluginsTab;
+    QGroupBox *m_pluginsConfigGroup;
+    QLineEdit *m_pluginDirectoryEdit;
+    QPushButton *m_refreshPluginsButton;
+    QPushButton *m_configurePluginButton;
+    QListWidget *m_loadedPluginsList;
 
     // Initialize UI components
     void initUI();
@@ -110,9 +152,9 @@ private:
     void createGeminiTab();
     void createOpenAITab();
     void createAnthropicTab();
-    void createSystemPromptTab();
-    void createHistoryTab();
     void createPluginsTab();
+
+    QtGPT *m_qtGPT;
 };
 
 #endif // SETTINGS_DIALOG_H

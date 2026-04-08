@@ -1,19 +1,23 @@
 #ifndef CHATWIDGET_H
 #define CHATWIDGET_H
 
-#include <QWidget>
+#include <QMainWindow>
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QTextEdit>
 #include <QPushButton>
 #include <QLabel>
 #include <QStatusBar>
+#include <QMenuBar>
+#include <QSplitter>
 #include <QMap>
 #include <QVector>
 #include <QByteArray>
 #include <disasterparty.h>
 
-class ChatWidget : public QWidget
+class MenuBar;
+
+class ChatWidget : public QMainWindow
 {
     Q_OBJECT
 
@@ -49,11 +53,12 @@ public:
     // Chat history
     void renderHistory(const QVector<QMap<QString, QString>> &history);
     void scrollToBottom();
-    void createMessageWidget(const QString &role, const QString &text, const QString &image_data = QString());
+    void createMessageWidget(const QString &role, const QString &text, const QString &image_data = QString(), int index = -1);
     QString roleColor(const QString &role);
 
     // UI initialization
     void initUI();
+    void setMenuBar(QMenuBar *menuBar);
     void show();
     void hide();
     void close();
@@ -65,6 +70,9 @@ public slots:
     void handleSend();
     void handleImageAttach();
     void handleImageRemove();
+    void onRetryClicked(int index);
+    void onCopyClicked(const QString &text);
+    void onEditClicked(int index, const QString &text);
 
 signals:
     void sendMessageSignal(const QString &text);
@@ -73,8 +81,17 @@ signals:
     void clearChatSignal();
     void toolResultRequested(const QString &tool_call_id, const QString &result);
     void clearChat();
+    void openConversation();
+    void saveConversation();
+    void retryRequested(int index);
+    void editRequested(int index, const QString &text);
+    void copyRequested(const QString &text);
+
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
+    void adjustInputHeight();
     QScrollArea *m_scrollArea;
     QWidget *m_messagesContainer;
     QVBoxLayout *m_messageLayout;
@@ -87,10 +104,12 @@ private:
     QHBoxLayout *m_inputLayout;
     QHBoxLayout *m_imageRowLayout;
     QList<QWidget*> m_messageWidgets;
+    QSpacerItem *m_messageSpacer;
     QLabel *m_thinkingLabel;
     QString m_attachedImagePath;
     QString m_attachedImageMimeType;
     QByteArray m_attachedImageBase64;
+    QMenuBar *m_menuBar;
 };
 
 #endif // CHATWIDGET_H

@@ -2,7 +2,13 @@
 #include "PipeHandler.h"
 #include "PluginManager.h"
 #include "utils.h"
+#include "SettingsDialog.h"
 #include <QCoreApplication>
+#include <QStandardPaths>
+#include <QTextStream>
+#include <QFile>
+#include <QFileInfo>
+#include <QDebug>
 
 QtGPT *QtGPT::s_instance = nullptr;
 
@@ -88,9 +94,138 @@ void QtGPT::destroyContext()
     m_mutex.unlock();
 }
 
+bool QtGPT::loadSettings()
+{
+    QString configPath = QStandardPaths::locate(QStandardPaths::ConfigLocation, "opencode/qtgpt/settings.conf");
+    
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (configPath.isEmpty()) {
+        configPath = appDataPath + "/settings.conf";
+    }
+
+    QFile configFile(configPath);
+    if (!configFile.open(QIODevice::ReadOnly)) {
+        return false;
+    }
+
+    QTextStream in(&configFile);
+
+    QString section, line;
+    while (!in.atEnd()) {
+        line = in.readLine().trimmed();
+        if (line.isEmpty() || line.startsWith('#')) continue;
+        
+        if (line.startsWith('[') && line.endsWith(']')) {
+            section = line.mid(1, line.length() - 2);
+            continue;
+        }
+        
+        int eqIdx = line.indexOf('=');
+        if (eqIdx > 0 && section.isEmpty()) continue;
+        
+        QString key = line.left(eqIdx).trimmed();
+        QString value = line.mid(eqIdx + 1).trimmed();
+        
+        if (section == "General") {
+            if (key == "Provider") {
+                if (value == "gemini") setProvider(DP_PROVIDER_GOOGLE_GEMINI);
+                else if (value == "openai") setProvider(DP_PROVIDER_OPENAI_COMPATIBLE);
+                else if (value == "anthropic") setProvider(DP_PROVIDER_ANTHROPIC);
+            } else if (key == "HistoryLimit") {
+                setMaxHistoryMessages(value.toInt());
+            } else if (key == "SystemPrompt") {
+                QString decoded = value;
+                decoded = decoded.replace("\\n", "\n");
+                setSystemPrompt(decoded);
+            } else if (key == "AppendSystemPrompt") {
+                setAppendSystemPrompt(value == "true");
+            } else if (key == "EnterSendsMessage") {
+                setEnterSendsMessage(value == "true");
+            }
+        } else if (section == "Gemini") {
+            if (key == "ApiKey") setGeminiApiKey(value);
+            else if (key == "ModelId") setGeminiModel(value);
+        } else if (section == "OpenAI") {
+            if (key == "ApiKey") setOpenaiApiKey(value);
+            else if (key == "ModelId") setOpenaiModel(value);
+            else if (key == "BaseUrl") setOpenaiBaseUrl(value);
+        } else if (section == "Anthropic") {
+            if (key == "ApiKey") setAnthropicApiKey(value);
+            else if (key == "ModelId") setAnthropicModel(value);
+        } else if (section == "Plugins") {
+            if (key == "Directory") setPluginDirectory(value);
+        }
+    }
+
+    configFile.close();
+    
+    QString currentProviderStr = "";
+    switch (m_provider) {
+        case DP_PROVIDER_GOOGLE_GEMINI: currentProviderStr = "gemini"; break;
+        case DP_PROVIDER_OPENAI_COMPATIBLE: currentProviderStr = "openai"; break;
+        case DP_PROVIDER_ANTHROPIC: currentProviderStr = "anthropic"; break;
+    }
+    
+    if (m_settingsDialog && currentProviderStr == m_settingsDialog->m_currentProvider) {
+        m_settingsDialog->populateSettings();
+    }
+    
+    return true;
+}
+
+bool QtGPT::saveSettings()
+{
+    QString configPath = QStandardPaths::locate(QStandardPaths::ConfigLocation, "opencode/qtgpt/settings.conf");
+    
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    if (configPath.isEmpty()) {
+        configPath = appDataPath + "/settings.conf";
+    }
+    
+    QFile configFile(configPath);
+    if (!configFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QString parentPath = QFileInfo(configFile).path();
+        QDir().mkpath(parentPath);
+        if (!configFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            return false;
+        }
+    }
+
+    QTextStream out(&configFile);
+
+    out << "# QtGPT Settings\n\n";
+
+    QString providerStr;
+    switch (m_provider) {
+        case DP_PROVIDER_GOOGLE_GEMINI: providerStr = "gemini"; break;
+        case DP_PROVIDER_OPENAI_COMPATIBLE: providerStr = "openai"; break;
+        case DP_PROVIDER_ANTHROPIC: providerStr = "anthropic"; break;
+    }
+
+    out << "[General]\n";
+    out << "Provider=" << providerStr << "\n";
+    out << "HistoryLimit=" << m_maxHistoryMessages << "\n";
+    out << "SaveHistory=true\n";
+    out << "LoadHistory=true\n";
+    out << "SystemPrompt=" << m_systemPrompt.replace("\n", "\\n").replace("\r", "\\n") << "\n\n";
+
+    out << "[Gemini]\n";
+    out << "ApiKey=" << m_geminiApiKey << "\n";
+    out << "ModelId=" << m_geminiModel << "\n\n";
+
+    out << "[OpenAI]\n";
+    out << "ApiKey=" << m_openaiApiKey << "\n";
+    out << "ModelId=" << m_openaiModel << "\n\n";
+
+    out << "[Anthropic]\n";
+    out << "ApiKey=" << m_anthropicApiKey << "\n";
+    out << "ModelId=" << m_anthropicModel << "\n";
+
+    configFile.close();
+    return true;
+}
+
 // Signal stubs
-void QtGPT::chatMessageAdded() { Q_EMIT chatMessageAdded(); }
-void QtGPT::settingsChanged() { Q_EMIT settingsChanged(); }
 
 void QtGPT::setGeminiApiKey(const QString &key)
 {
@@ -204,4 +339,91 @@ void QtGPT::clearChatHistory()
 void QtGPT::loadPlugins()
 {
     m_pluginManager->loadPlugins(m_pluginDirectory);
+}
+
+void QtGPT::loadSettingsSlot()
+{
+    loadSettings();
+    
+    // Update UI with loaded settings
+    if (m_settingsDialog) {
+        m_settingsDialog->populateSettings();
+    }
+}
+
+void QtGPT::discardChangesSlot()
+{
+    // Discard changes - reload from saved config
+    loadSettings();
+    
+    if (m_settingsDialog) {
+        m_settingsDialog->populateSettings();
+    }
+}
+
+void QtGPT::openConversationSlot()
+{
+    // Open conversation - would need file dialog implementation
+    clearChatSlot();
+}
+
+void QtGPT::saveConversationSlot()
+{
+    // Save conversation - would need file dialog implementation
+    // No need to clear chat on save, normally, but following original stub logic
+}
+
+void QtGPT::openSettingsSlot()
+{
+    if (m_settingsDialog) {
+        m_settingsDialog->populateSettings();
+        m_settingsDialog->showSettings();
+    }
+}
+
+void QtGPT::clearChatSlot()
+{
+    emit clearChatSignal();
+    clearChatHistory();
+}
+
+void QtGPT::quitSlot()
+{
+    if (m_mainWindow) {
+        m_mainWindow->close();
+    }
+}
+
+void QtGPT::retryRequestedSlot(int index)
+{
+    m_mutex.lock();
+    if (index >= 0 && index < m_chatHistory.count()) {
+        // Truncate history to this index + 1 (keep the message being retried)
+        m_chatHistory = m_chatHistory.mid(0, index + 1);
+        m_mutex.unlock();
+        emit chatMessageAdded();
+        
+        // Trigger completion (re-run)
+        qDebug() << "Retry triggered for message at index:" << index;
+    } else {
+        m_mutex.unlock();
+    }
+}
+
+void QtGPT::editRequestedSlot(int index, const QString &text)
+{
+    m_mutex.lock();
+    if (index >= 0 && index < m_chatHistory.count()) {
+        // Truncate history to this index + 1
+        m_chatHistory = m_chatHistory.mid(0, index + 1);
+        // Update the message text
+        m_chatHistory[index]["text"] = text;
+        m_mutex.unlock();
+        emit chatMessageAdded();
+        
+        // Trigger completion (re-run)
+        qDebug() << "Edit & Retry triggered for message at index:" << index << "with text:" << text;
+    } else {
+        m_mutex.unlock();
+    }
 }
