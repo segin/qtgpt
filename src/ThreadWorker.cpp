@@ -75,6 +75,7 @@ CompletionWorker::~CompletionWorker()
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QJsonValue>
 
 int CompletionWorker::streamCallback(const dp_stream_event_t *event, void *user_data, const char *err)
@@ -89,22 +90,66 @@ int CompletionWorker::streamCallback(const dp_stream_event_t *event, void *user_
     }
     
     if (event) {
+        // qDebug() << "Stream event type:" << event->event_type << "data:" << (event->raw_json_data ? event->raw_json_data : "null");
         if (event->event_type == DP_EVENT_MESSAGE_STOP) {
             emit worker->streamFinished();
         } else if (event->event_type == DP_EVENT_CONTENT_BLOCK_DELTA || event->event_type == DP_EVENT_THINKING_DELTA) {
             if (event->raw_json_data) {
                 QJsonDocument doc = QJsonDocument::fromJson(QByteArray(event->raw_json_data));
-                QJsonObject obj = doc.object();
-                if (obj.contains("delta")) {
-                    QJsonObject delta = obj["delta"].toObject();
-                    if (delta["type"].toString() == "text_delta") {
-                        emit worker->tokenReceived(delta["text"].toString());
-                    } else if (delta["type"].toString() == "thinking_delta") {
-                        emit worker->thinkingReceived(delta["thinking"].toString());
+                if (doc.isNull() || doc.isEmpty()) {
+                    // Fallback for simple strings
+                    if (event->event_type == DP_EVENT_CONTENT_BLOCK_DELTA) {
+                        emit worker->tokenReceived(QString::fromUtf8(event->raw_json_data));
+                    } else if (event->event_type == DP_EVENT_THINKING_DELTA) {
+                        emit worker->thinkingReceived(QString::fromUtf8(event->raw_json_data));
+                    }
+                } else {
+                    QJsonObject obj = doc.object();
+                    // Anthropic
+                    if (obj.contains("delta")) {
+                        QJsonObject delta = obj["delta"].toObject();
+                        if (delta["type"].toString() == "text_delta") {
+                            QString text = delta["text"].toString();
+                            if (!text.isEmpty()) emit worker->tokenReceived(text);
+                        } else if (delta["type"].toString() == "thinking_delta") {
+                            QString thinking = delta["thinking"].toString();
+                            if (!thinking.isEmpty()) emit worker->thinkingReceived(thinking);
+                        }
+                    } 
+                    // OpenAI
+                    else if (obj.contains("choices")) {
+                        QJsonArray choices = obj["choices"].toArray();
+                        if (!choices.isEmpty()) {
+                            QJsonObject delta = choices[0].toObject()["delta"].toObject();
+                            if (delta.contains("content")) {
+                                QString text = delta["content"].toString();
+                                if (!text.isEmpty()) emit worker->tokenReceived(text);
+                            }
+                            if (delta.contains("reasoning_content")) {
+                                QString thinking = delta["reasoning_content"].toString();
+                                if (!thinking.isEmpty()) emit worker->thinkingReceived(thinking);
+                            }
+                        }
+                    }
+                    // Gemini (if structured this way)
+                    else if (obj.contains("candidates")) {
+                        QJsonArray candidates = obj["candidates"].toArray();
+                        if (!candidates.isEmpty()) {
+                            QJsonObject content = candidates[0].toObject()["content"].toObject();
+                            QJsonArray parts = content["parts"].toArray();
+                            for (const QJsonValue &part : parts) {
+                                QJsonObject pObj = part.toObject();
+                                if (pObj.contains("text")) {
+                                    QString text = pObj["text"].toString();
+                                    if (!text.isEmpty()) emit worker->tokenReceived(text);
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+
     }
     return 0;
 }
