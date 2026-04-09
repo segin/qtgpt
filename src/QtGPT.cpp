@@ -1,4 +1,5 @@
 #include "QtGPT.h"
+#include "ThreadWorker.h"
 #include "PipeHandler.h"
 #include "PluginManager.h"
 #include "utils.h"
@@ -27,6 +28,7 @@ QtGPT::QtGPT(QObject *parent)
     m_maxHistoryMessages = 100;
     m_appendSystemPrompt = true;
     m_enterSendsMessage = true;
+    m_isStreaming = false;
 
     // Load config paths
     m_pluginDirectory = Utils::getUserConfigDir() + "/plugins";
@@ -321,12 +323,16 @@ void QtGPT::addChatMessage(const QString &role, const QString &text, const QStri
     msg["base64"] = base64;
     m_chatHistory.append(msg);
     
-    if (m_chatHistory.count() > m_maxHistoryMessages) {
+    if (m_maxHistoryMessages > 0 && m_chatHistory.count() > m_maxHistoryMessages) {
         m_chatHistory.removeFirst();
     }
     m_mutex.unlock();
 
     emit chatMessageAdded();
+
+    if (role == "user" || role == "tool") {
+        startCompletion();
+    }
 }
 
 void QtGPT::clearChatHistory()
@@ -344,13 +350,16 @@ void QtGPT::loadPlugins()
 void QtGPT::loadSettingsSlot()
 {
     loadSettings();
-    
+
+    // Re-initialize Disasterparty context with new settings
+    destroyContext();
+    initContext();
+
     // Update UI with loaded settings
     if (m_settingsDialog) {
         m_settingsDialog->populateSettings();
     }
 }
-
 void QtGPT::discardChangesSlot()
 {
     // Discard changes - reload from saved config
@@ -423,7 +432,94 @@ void QtGPT::editRequestedSlot(int index, const QString &text)
         
         // Trigger completion (re-run)
         qDebug() << "Edit & Retry triggered for message at index:" << index << "with text:" << text;
+        startCompletion();
     } else {
         m_mutex.unlock();
     }
+}
+
+void QtGPT::startCompletion()
+{
+    if (m_isStreaming || !m_dpContext) {
+        return;
+    }
+
+    m_isStreaming = true;
+    m_currentAssistantMessage.clear();
+    
+    // Add empty assistant message to UI
+    m_mutex.lock();
+    QMap<QString, QString> msg;
+    msg["role"] = "assistant";
+    msg["text"] = "";
+    m_chatHistory.append(msg);
+    m_mutex.unlock();
+    emit chatMessageAdded();
+
+    // Set up config
+    dp_request_config_t config;
+    memset(&config, 0, sizeof(dp_request_config_t));
+    
+    if (m_provider == DP_PROVIDER_GOOGLE_GEMINI) config.model = strdup(m_geminiModel.toUtf8().constData());
+    else if (m_provider == DP_PROVIDER_OPENAI_COMPATIBLE) config.model = strdup(m_openaiModel.toUtf8().constData());
+    else if (m_provider == DP_PROVIDER_ANTHROPIC) config.model = strdup(m_anthropicModel.toUtf8().constData());
+    
+    config.system_prompt = m_appendSystemPrompt ? strdup(m_systemPrompt.toUtf8().constData()) : nullptr;
+    config.temperature = 0.7;
+    config.stream = true;
+    
+    // Allocate messages
+    m_mutex.lock();
+    size_t histCount = m_chatHistory.count() - 1; // don't include the empty assistant message we just added
+    config.num_messages = histCount;
+    config.messages = (dp_message_t*)calloc(histCount, sizeof(dp_message_t));
+    
+    for (size_t i = 0; i < histCount; ++i) {
+        const QMap<QString, QString> &qMsg = m_chatHistory[i];
+        dp_message_t &dpMsg = config.messages[i];
+        
+        if (qMsg["role"] == "user") dpMsg.role = DP_ROLE_USER;
+        else if (qMsg["role"] == "assistant") dpMsg.role = DP_ROLE_ASSISTANT;
+        else if (qMsg["role"] == "tool") dpMsg.role = DP_ROLE_TOOL;
+        else dpMsg.role = DP_ROLE_SYSTEM;
+        
+        dp_message_add_text_part(&dpMsg, qMsg["text"].toUtf8().constData());
+        
+        if (!qMsg["mime"].isEmpty() && !qMsg["base64"].isEmpty()) {
+            dp_message_add_base64_image_part(&dpMsg, qMsg["mime"].toUtf8().constData(), qMsg["base64"].toUtf8().constData());
+        }
+    }
+    m_mutex.unlock();
+
+    // Start thread worker
+    CompletionWorker *worker = new CompletionWorker(m_dpContext, config, this);
+    connect(worker, &CompletionWorker::tokenReceived, this, &QtGPT::handleTokenReceived);
+    connect(worker, &CompletionWorker::streamFinished, this, &QtGPT::handleStreamFinished);
+    connect(worker, &CompletionWorker::error, this, &QtGPT::handleCompletionError);
+    connect(worker, &ThreadWorker::finished, worker, &QObject::deleteLater);
+    
+    worker->startWork();
+}
+
+void QtGPT::handleTokenReceived(const QString &token)
+{
+    m_mutex.lock();
+    m_currentAssistantMessage += token;
+    m_chatHistory.last()["text"] = m_currentAssistantMessage;
+    m_mutex.unlock();
+    emit chatMessageAdded();
+}
+
+void QtGPT::handleStreamFinished()
+{
+    m_isStreaming = false;
+}
+
+void QtGPT::handleCompletionError(const QString &err)
+{
+    m_mutex.lock();
+    m_chatHistory.last()["text"] += "\n\n[Error: " + err + "]";
+    m_mutex.unlock();
+    emit chatMessageAdded();
+    m_isStreaming = false;
 }

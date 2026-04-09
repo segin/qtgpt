@@ -75,6 +75,7 @@ class QtGPT : public QObject
     void initContext();
     void destroyContext();
     void loadPlugins();
+    void startCompletion();
 
     // Chat history (in memory for now)
     public:
@@ -105,6 +106,10 @@ class QtGPT : public QObject
     QList<QString> m_geminiModelList;
     QList<QString> m_openaiModelList;
     QList<QString> m_anthropicModelList;
+    
+    // Streaming state
+    QString m_currentAssistantMessage;
+    bool m_isStreaming;
 
 signals:
     void chatMessageAdded();
@@ -129,6 +134,11 @@ public slots:
     void retryRequestedSlot(int index);
     void editRequestedSlot(int index, const QString &text);
     void clearChatSlot();
+    
+    // Completion handlers
+    void handleTokenReceived(const QString &token);
+    void handleStreamFinished();
+    void handleCompletionError(const QString &err);
 
 private:
     static QtGPT *s_instance;
