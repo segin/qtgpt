@@ -541,7 +541,7 @@ void QtGPT::handleTokenReceived(const QString &token)
     m_currentAssistantMessage += token;
     QString fullMessage = m_currentAssistantMessage;
     if (!m_currentThinking.isEmpty()) {
-        fullMessage = "<details><summary><i>Thinking...</i></summary>\n" + m_currentThinking + "\n</details>\n\n" + m_currentAssistantMessage;
+        fullMessage = "> **Thinking...**\n> " + QString(m_currentThinking).replace("\n", "\n> ") + "\n\n" + m_currentAssistantMessage;
     }
     m_chatHistory.last()["text"] = fullMessage;
     m_mutex.unlock();
@@ -552,7 +552,7 @@ void QtGPT::handleThinkingReceived(const QString &token)
 {
     m_mutex.lock();
     m_currentThinking += token;
-    QString fullMessage = "<details><summary><i>Thinking...</i></summary>\n" + m_currentThinking + "\n</details>\n\n" + m_currentAssistantMessage;
+    QString fullMessage = "> **Thinking...**\n> " + QString(m_currentThinking).replace("\n", "\n> ") + "\n\n" + m_currentAssistantMessage;
     m_chatHistory.last()["text"] = fullMessage;
     m_mutex.unlock();
     emit chatMessageAdded();
