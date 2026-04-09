@@ -254,6 +254,7 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
     msgLayout->addWidget(roleLabel, 0, (role == "user") ? Qt::AlignRight : Qt::AlignLeft);
     
     QTextEdit *textWidget = new QTextEdit();
+    textWidget->setObjectName("messageText");
     if (role == "user") {
         textWidget->setPlainText(text);
     } else {
@@ -371,6 +372,26 @@ QString ChatWidget::roleColor(const QString &role)
 
 void ChatWidget::renderHistory(const QVector<QMap<QString, QString>> &history)
 {
+    // Fast path for streaming updates
+    if (history.size() == m_messageWidgets.size() && !history.isEmpty()) {
+        const QMap<QString, QString> &msg = history.last();
+        QWidget *lastWidget = m_messageWidgets.last();
+        QTextEdit *textWidget = lastWidget->findChild<QTextEdit*>("messageText");
+        if (textWidget) {
+            QString text = msg.value("text", "");
+            QString role = msg.value("role", "");
+            if (role == "user") {
+                textWidget->setPlainText(text);
+            } else {
+                textWidget->setMarkdown(text);
+            }
+            int docHeight = textWidget->document()->size().height();
+            textWidget->setFixedHeight(docHeight + 10);
+            scrollToBottom();
+            return;
+        }
+    }
+
     // Clear existing widgets
     for (QWidget *widget : m_messageWidgets) {
         widget->setParent(nullptr);
