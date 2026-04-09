@@ -117,6 +117,31 @@ void SettingsDialog::createGeneralTab()
 
     layout->addWidget(m_historyGroup);
 
+    m_reasoningGroup = new QGroupBox("Reasoning Settings", m_generalTab);
+    QGridLayout *reasoningLayout = new QGridLayout(m_reasoningGroup);
+    m_reasoningGroup->setLayout(reasoningLayout);
+    
+    m_reasoningEnabledCheckbox = new QCheckBox("Enable Reasoning", m_reasoningGroup);
+    m_reasoningBudgetSpinBox = new QSpinBox(m_reasoningGroup);
+    m_reasoningBudgetSpinBox->setRange(0, 64000);
+    m_reasoningBudgetSpinBox->setSingleStep(1024);
+    m_reasoningBudgetSpinBox->setSuffix(" tokens");
+    
+    m_reasoningEffortComboBox = new QComboBox(m_reasoningGroup);
+    m_reasoningEffortComboBox->addItems({"low", "medium", "high"});
+    
+    reasoningLayout->addWidget(m_reasoningEnabledCheckbox, 0, 0);
+    reasoningLayout->addWidget(new QLabel("Budget:", m_reasoningGroup), 0, 1);
+    reasoningLayout->addWidget(m_reasoningBudgetSpinBox, 0, 2);
+    reasoningLayout->addWidget(new QLabel("Effort:", m_reasoningGroup), 1, 1);
+    reasoningLayout->addWidget(m_reasoningEffortComboBox, 1, 2);
+    
+    connect(m_reasoningEnabledCheckbox, &QCheckBox::toggled, this, &SettingsDialog::onReasoningEnabledChanged);
+    connect(m_reasoningBudgetSpinBox, qOverload<int>(&QSpinBox::valueChanged), this, &SettingsDialog::onReasoningBudgetChanged);
+    connect(m_reasoningEffortComboBox, &QComboBox::currentTextChanged, this, &SettingsDialog::onReasoningEffortChanged);
+    
+    layout->addWidget(m_reasoningGroup);
+
     QHBoxLayout *systemPromptLayout = new QHBoxLayout();
     systemPromptLayout->addWidget(new QLabel("System Prompt:", m_generalTab));
     m_systemPromptEdit = new QTextEdit(m_generalTab);
@@ -423,7 +448,10 @@ bool SettingsDialog::saveSettings()
     out << "LoadHistory=true\n";
     out << "SystemPrompt=" << m_systemPromptEdit->toPlainText().replace("\n", "\\n").replace("\r", "\\n") << "\n";
     out << "AppendSystemPrompt=" << (m_appendSystemPromptCheckbox->isChecked() ? "true" : "false") << "\n";
-    out << "EnterSendsMessage=" << (m_enterSendsMessageCheckbox->isChecked() ? "true" : "false") << "\n\n";
+    out << "EnterSendsMessage=" << (m_enterSendsMessageCheckbox->isChecked() ? "true" : "false") << "\n";
+    out << "ReasoningEnabled=" << (m_reasoningEnabledCheckbox->isChecked() ? "true" : "false") << "\n";
+    out << "ReasoningBudget=" << m_reasoningBudgetSpinBox->value() << "\n";
+    out << "ReasoningEffort=" << m_reasoningEffortComboBox->currentText() << "\n\n";
 
     out << "[Gemini]\n";
     out << "ApiKey=" << m_geminiApiKeyEdit->text() << "\n";
@@ -471,6 +499,9 @@ void SettingsDialog::populateSettings()
     m_enterSendsMessageCheckbox->setChecked(qtgpt->enterSendsMessage());
     m_appendSystemPromptCheckbox->setChecked(qtgpt->appendSystemPrompt());
     m_systemPromptEdit->setPlainText(qtgpt->systemPrompt());
+    m_reasoningEnabledCheckbox->setChecked(qtgpt->reasoningEnabled());
+    m_reasoningBudgetSpinBox->setValue(qtgpt->reasoningBudget());
+    m_reasoningEffortComboBox->setCurrentText(qtgpt->reasoningEffort());
 
     // Gemini tab
     m_geminiApiKeyEdit->setText(qtgpt->geminiApiKey());
@@ -705,6 +736,21 @@ void SettingsDialog::onEnterSendsChanged()
 void SettingsDialog::onAppendPromptChanged()
 {
     emit AppendPromptChanged(m_appendSystemPromptCheckbox->isChecked());
+}
+
+void SettingsDialog::onReasoningEnabledChanged()
+{
+    emit ReasoningEnabledChanged(m_reasoningEnabledCheckbox->isChecked());
+}
+
+void SettingsDialog::onReasoningBudgetChanged()
+{
+    emit ReasoningBudgetChanged(m_reasoningBudgetSpinBox->value());
+}
+
+void SettingsDialog::onReasoningEffortChanged()
+{
+    emit ReasoningEffortChanged(m_reasoningEffortComboBox->currentText());
 }
 
 void SettingsDialog::onConfigurePlugin()

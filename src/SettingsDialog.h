@@ -73,6 +73,9 @@ signals:
     void HistoryLimitsToggled(bool checked);
     void EnterSendsChanged(bool checked);
     void AppendPromptChanged(bool checked);
+    void ReasoningEnabledChanged(bool checked);
+    void ReasoningBudgetChanged(int value);
+    void ReasoningEffortChanged(const QString &value);
 
 public slots:
     void onApply();
@@ -88,6 +91,9 @@ public slots:
     void onHistoryLimitsToggled(bool checked);
     void onEnterSendsChanged();
     void onAppendPromptChanged();
+    void onReasoningEnabledChanged();
+    void onReasoningBudgetChanged();
+    void onReasoningEffortChanged();
     void onConfigurePlugin();
 
 public:
@@ -112,6 +118,11 @@ private:
     QCheckBox *m_enterSendsMessageCheckbox;
     QCheckBox *m_appendSystemPromptCheckbox;
     QTextEdit *m_systemPromptEdit;
+
+    QGroupBox *m_reasoningGroup;
+    QCheckBox *m_reasoningEnabledCheckbox;
+    QSpinBox *m_reasoningBudgetSpinBox;
+    QComboBox *m_reasoningEffortComboBox;
 
     // Gemini tab
     QWidget *m_geminiTab;

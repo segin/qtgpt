@@ -15,7 +15,7 @@ ThreadWorker::~ThreadWorker()
         m_thread->quit();
         m_thread->wait();
     }
-    delete m_thread;
+    // m_thread deletes itself via deleteLater
 }
 
 void ThreadWorker::startWork()
@@ -73,7 +73,11 @@ CompletionWorker::~CompletionWorker()
     }
 }
 
-int CompletionWorker::streamCallback(const char *token, void *user_data, bool is_final_chunk, const char *err)
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonValue>
+
+int CompletionWorker::streamCallback(const dp_stream_event_t *event, void *user_data, const char *err)
 {
     CompletionWorker *worker = static_cast<CompletionWorker*>(user_data);
     if (!worker->isRunning()) {
@@ -83,11 +87,24 @@ int CompletionWorker::streamCallback(const char *token, void *user_data, bool is
         emit worker->error(QString::fromUtf8(err));
         return 0;
     }
-    if (token) {
-        emit worker->tokenReceived(QString::fromUtf8(token));
-    }
-    if (is_final_chunk) {
-        emit worker->streamFinished();
+    
+    if (event) {
+        if (event->event_type == DP_EVENT_MESSAGE_STOP) {
+            emit worker->streamFinished();
+        } else if (event->event_type == DP_EVENT_CONTENT_BLOCK_DELTA || event->event_type == DP_EVENT_THINKING_DELTA) {
+            if (event->raw_json_data) {
+                QJsonDocument doc = QJsonDocument::fromJson(QByteArray(event->raw_json_data));
+                QJsonObject obj = doc.object();
+                if (obj.contains("delta")) {
+                    QJsonObject delta = obj["delta"].toObject();
+                    if (delta["type"].toString() == "text_delta") {
+                        emit worker->tokenReceived(delta["text"].toString());
+                    } else if (delta["type"].toString() == "thinking_delta") {
+                        emit worker->thinkingReceived(delta["thinking"].toString());
+                    }
+                }
+            }
+        }
     }
     return 0;
 }
@@ -95,7 +112,7 @@ int CompletionWorker::streamCallback(const char *token, void *user_data, bool is
 void CompletionWorker::run()
 {
     dp_response_t response = {0};
-    int ret = dp_perform_streaming_completion(m_ctx, &m_config, streamCallback, this, &response);
+    int ret = dp_perform_detailed_streaming_completion(m_ctx, &m_config, streamCallback, this, &response);
     
     if (ret != 0) {
         QString errStr;

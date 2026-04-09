@@ -49,6 +49,9 @@ class QtGPT : public QObject
     QString pluginDirectory() const { return m_pluginDirectory; }
     bool appendSystemPrompt() const { return m_appendSystemPrompt; }
     bool enterSendsMessage() const { return m_enterSendsMessage; }
+    bool reasoningEnabled() const { return m_reasoningEnabled; }
+    int reasoningBudget() const { return m_reasoningBudget; }
+    QString reasoningEffort() const { return m_reasoningEffort; }
 
     // Configuration
     public:
@@ -65,6 +68,9 @@ class QtGPT : public QObject
     void setPluginDirectory(const QString &dir);
     void setAppendSystemPrompt(bool enable);
     void setEnterSendsMessage(bool enable);
+    void setReasoningEnabled(bool enable);
+    void setReasoningBudget(int budget);
+    void setReasoningEffort(const QString &effort);
 
     // Settings persistence
     bool loadSettings();
@@ -109,6 +115,7 @@ class QtGPT : public QObject
     
     // Streaming state
     QString m_currentAssistantMessage;
+    QString m_currentThinking;
     bool m_isStreaming;
 
 signals:
@@ -137,6 +144,7 @@ public slots:
     
     // Completion handlers
     void handleTokenReceived(const QString &token);
+    void handleThinkingReceived(const QString &token);
     void handleStreamFinished();
     void handleCompletionError(const QString &err);
 
@@ -161,6 +169,9 @@ private:
     QString m_pluginDirectory;
     bool m_appendSystemPrompt;
     bool m_enterSendsMessage;
+    bool m_reasoningEnabled;
+    int m_reasoningBudget;
+    QString m_reasoningEffort;
 
     // Chat history
     QList<QMap<QString, QString>> m_chatHistory;

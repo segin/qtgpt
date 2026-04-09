@@ -29,6 +29,9 @@ QtGPT::QtGPT(QObject *parent)
     m_appendSystemPrompt = true;
     m_enterSendsMessage = true;
     m_isStreaming = false;
+    m_reasoningEnabled = false;
+    m_reasoningBudget = 1024;
+    m_reasoningEffort = "medium";
 
     // Load config paths
     m_pluginDirectory = Utils::getUserConfigDir() + "/plugins";
@@ -143,6 +146,12 @@ bool QtGPT::loadSettings()
                 setAppendSystemPrompt(value == "true");
             } else if (key == "EnterSendsMessage") {
                 setEnterSendsMessage(value == "true");
+            } else if (key == "ReasoningEnabled") {
+                setReasoningEnabled(value == "true");
+            } else if (key == "ReasoningBudget") {
+                setReasoningBudget(value.toInt());
+            } else if (key == "ReasoningEffort") {
+                setReasoningEffort(value);
             }
         } else if (section == "Gemini") {
             if (key == "ApiKey") setGeminiApiKey(value);
@@ -308,6 +317,24 @@ void QtGPT::setEnterSendsMessage(bool enable)
     emit settingsChanged();
 }
 
+void QtGPT::setReasoningEnabled(bool enable)
+{
+    m_reasoningEnabled = enable;
+    emit settingsChanged();
+}
+
+void QtGPT::setReasoningBudget(int budget)
+{
+    m_reasoningBudget = budget;
+    emit settingsChanged();
+}
+
+void QtGPT::setReasoningEffort(const QString &effort)
+{
+    m_reasoningEffort = effort;
+    emit settingsChanged();
+}
+
 QList<QMap<QString, QString>> QtGPT::chatHistory() const
 {
     return m_chatHistory;
@@ -446,6 +473,7 @@ void QtGPT::startCompletion()
 
     m_isStreaming = true;
     m_currentAssistantMessage.clear();
+    m_currentThinking.clear();
     
     // Add empty assistant message to UI
     m_mutex.lock();
@@ -467,6 +495,11 @@ void QtGPT::startCompletion()
     config.system_prompt = m_appendSystemPrompt ? strdup(m_systemPrompt.toUtf8().constData()) : nullptr;
     config.temperature = 0.7;
     config.stream = true;
+    config.thinking.enabled = m_reasoningEnabled;
+    config.thinking.budget_tokens = m_reasoningBudget;
+    if (!m_reasoningEffort.isEmpty()) {
+        config.reasoning_effort = strdup(m_reasoningEffort.toUtf8().constData());
+    }
     
     // Allocate messages
     m_mutex.lock();
@@ -494,6 +527,7 @@ void QtGPT::startCompletion()
     // Start thread worker
     CompletionWorker *worker = new CompletionWorker(m_dpContext, config, this);
     connect(worker, &CompletionWorker::tokenReceived, this, &QtGPT::handleTokenReceived);
+    connect(worker, &CompletionWorker::thinkingReceived, this, &QtGPT::handleThinkingReceived);
     connect(worker, &CompletionWorker::streamFinished, this, &QtGPT::handleStreamFinished);
     connect(worker, &CompletionWorker::error, this, &QtGPT::handleCompletionError);
     connect(worker, &ThreadWorker::finished, worker, &QObject::deleteLater);
@@ -505,7 +539,21 @@ void QtGPT::handleTokenReceived(const QString &token)
 {
     m_mutex.lock();
     m_currentAssistantMessage += token;
-    m_chatHistory.last()["text"] = m_currentAssistantMessage;
+    QString fullMessage = m_currentAssistantMessage;
+    if (!m_currentThinking.isEmpty()) {
+        fullMessage = "<details><summary><i>Thinking...</i></summary>\n" + m_currentThinking + "\n</details>\n\n" + m_currentAssistantMessage;
+    }
+    m_chatHistory.last()["text"] = fullMessage;
+    m_mutex.unlock();
+    emit chatMessageAdded();
+}
+
+void QtGPT::handleThinkingReceived(const QString &token)
+{
+    m_mutex.lock();
+    m_currentThinking += token;
+    QString fullMessage = "<details><summary><i>Thinking...</i></summary>\n" + m_currentThinking + "\n</details>\n\n" + m_currentAssistantMessage;
+    m_chatHistory.last()["text"] = fullMessage;
     m_mutex.unlock();
     emit chatMessageAdded();
 }
