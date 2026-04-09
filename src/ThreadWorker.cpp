@@ -24,6 +24,7 @@ void ThreadWorker::startWork()
     m_data = nullptr;
     m_running = true;
     
+    this->setParent(nullptr);
     this->moveToThread(m_thread);
     connect(m_thread, &QThread::started, this, &ThreadWorker::run);
     connect(this, &ThreadWorker::finished, m_thread, &QThread::quit);
