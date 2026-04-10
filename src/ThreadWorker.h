@@ -52,7 +52,7 @@ signals:
 private:
     dp_context_t *m_ctx;
     dp_request_config_t m_config;
-    static int streamCallback(const char *token, void *user_data, bool is_final_chunk, const char *err);
+    static int streamCallback(const dp_stream_event_t *event, void *user_data, const char *err);
 };
 
 #endif // THREADWORKER_H
