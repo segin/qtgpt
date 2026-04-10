@@ -66,16 +66,18 @@ QString Utils::getImageMimeType(const QByteArray &data)
         return QString();
     }
     
+    const unsigned char *uData = reinterpret_cast<const unsigned char*>(data.constData());
+
     // Check PNG signature
     if (data.size() >= 8) {
-        if (data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 &&
-            data[4] == 0x0D && data[5] == 0x0A && data[6] == 0x1A && data[7] == 0x0A) {
+        if (uData[0] == 0x89 && uData[1] == 0x50 && uData[2] == 0x4E && uData[3] == 0x47 &&
+            uData[4] == 0x0D && uData[5] == 0x0A && uData[6] == 0x1A && uData[7] == 0x0A) {
             return "image/png";
         }
     }
     
     // Check JPEG signature
-    if (data.size() >= 3 && data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF) {
+    if (data.size() >= 3 && uData[0] == 0xFF && uData[1] == 0xD8 && uData[2] == 0xFF) {
         return "image/jpeg";
     }
     
@@ -161,6 +163,7 @@ QString Utils::unescapeJson(const QString &str)
 
 QString Utils::generateSystemPrompt(const QString &custom_prompt, const QString &system_prompt, bool append_tools)
 {
+    Q_UNUSED(append_tools);
     QString prompt = system_prompt;
     if (!custom_prompt.isEmpty()) {
         if (!prompt.isEmpty()) {

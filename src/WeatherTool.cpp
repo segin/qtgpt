@@ -2,10 +2,12 @@
 #include "WeatherTool.h"
 
 WeatherTool::WeatherTool(QObject *parent)
-    : Tool("weather", "Get weather information for a city", "{\"city\": {\"type\": \"string\", \"description\": \"The city name\", \"required\": true}}")
+    : Tool("weather", "Get current weather", "{\"city\": {\"type\": \"string\", \"description\": \"The city name\", \"required\": true}}")
 {
+    Q_UNUSED(parent);
     m_api_key = "weather_api_key";
 }
+
 
 WeatherTool::~WeatherTool()
 {
@@ -28,7 +30,9 @@ const char *WeatherTool::parameters_schema() const
 
 QString WeatherTool::execute(const QString &args_json)
 {
-    // Parse args and fetch weather
+    Q_UNUSED(args_json);
+    // Parse args and fetch weather data
+
     WeatherData data;
     data.city = "New York";
     data.temperature = "72°F";
@@ -41,6 +45,7 @@ QString WeatherTool::execute(const QString &args_json)
 
 WeatherTool::WeatherData WeatherTool::fetchWeather(const QString &city, const QString &api_key)
 {
+    Q_UNUSED(api_key);
     WeatherData data;
     data.city = city;
     data.temperature = "72°F";

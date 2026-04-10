@@ -154,7 +154,8 @@ int CompletionWorker::streamCallback(const dp_stream_event_t *event, void *user_
 
 void CompletionWorker::run()
 {
-    dp_response_t response = {0};
+    dp_response_t response;
+    memset(&response, 0, sizeof(dp_response_t));
     int ret = dp_perform_detailed_streaming_completion(m_ctx, &m_config, streamCallback, this, &response);
     
     if (ret != 0) {

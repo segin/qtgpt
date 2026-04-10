@@ -163,6 +163,7 @@ void SettingsDialog::createGeminiTab()
     configLayout->addWidget(new QLabel("API Key:", m_geminiTab), 0, 0);
     m_geminiApiKeyEdit = new QLineEdit(m_geminiTab);
     m_geminiApiKeyEdit->setPlaceholderText("Enter API key");
+    m_geminiApiKeyEdit->setEchoMode(QLineEdit::Password);
     configLayout->addWidget(m_geminiApiKeyEdit, 0, 1);
 
     configLayout->addWidget(new QLabel("Model ID:", m_geminiTab), 1, 0);
@@ -203,6 +204,7 @@ void SettingsDialog::createOpenAITab()
     configLayout->addWidget(new QLabel("API Key:", m_openaiTab), 0, 0);
     m_openaiApiKeyEdit = new QLineEdit(m_openaiTab);
     m_openaiApiKeyEdit->setPlaceholderText("Enter API key");
+    m_openaiApiKeyEdit->setEchoMode(QLineEdit::Password);
     configLayout->addWidget(m_openaiApiKeyEdit, 0, 1);
 
     configLayout->addWidget(new QLabel("Base URL:", m_openaiTab), 1, 0);
@@ -248,6 +250,7 @@ void SettingsDialog::createAnthropicTab()
     configLayout->addWidget(new QLabel("API Key:", m_anthropicTab), 0, 0);
     m_anthropicApiKeyEdit = new QLineEdit(m_anthropicTab);
     m_anthropicApiKeyEdit->setPlaceholderText("Enter API key");
+    m_anthropicApiKeyEdit->setEchoMode(QLineEdit::Password);
     configLayout->addWidget(m_anthropicApiKeyEdit, 0, 1);
 
     configLayout->addWidget(new QLabel("Model ID:", m_anthropicTab), 1, 0);
@@ -716,11 +719,6 @@ void SettingsDialog::onTabChanged(int index)
 void SettingsDialog::onGeminiLoadModels()
 {
     emit GetModels(DP_PROVIDER_GOOGLE_GEMINI, m_geminiApiKeyEdit->text());
-    emit GetModels(DP_PROVIDER_OPENAI_COMPATIBLE, m_openaiApiKeyEdit->text());
-    emit GetModels(DP_PROVIDER_ANTHROPIC, m_anthropicApiKeyEdit->text());
-    emit UseSelectedModel(DP_PROVIDER_GOOGLE_GEMINI, m_geminiModelEdit->text());
-    emit UseSelectedModel(DP_PROVIDER_OPENAI_COMPATIBLE, m_openaiModelEdit->text());
-    emit UseSelectedModel(DP_PROVIDER_ANTHROPIC, m_anthropicModelEdit->text());
 }
 
 void SettingsDialog::onHistoryLimitsToggled(bool checked)

@@ -34,6 +34,7 @@ QString Tool::execute(const QString &args_json)
 
 bool Tool::validateToolCall(const QString &tool_name, const QString &args_json)
 {
+    Q_UNUSED(tool_name);
     // Simple validation - check JSON structure
     if (args_json.startsWith("{") && args_json.endsWith("}")) {
         return true;

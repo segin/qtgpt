@@ -444,6 +444,7 @@ void QtGPT::retryRequestedSlot(int index)
         
         // Trigger completion (re-run)
         qDebug() << "Retry triggered for message at index:" << index;
+        startCompletion();
     } else {
         m_mutex.unlock();
     }

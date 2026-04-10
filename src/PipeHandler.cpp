@@ -105,6 +105,7 @@ void PipeHandler::handlePipeInput()
 
 void PipeHandler::pipeInputCallback(int fd, void *data)
 {
+    Q_UNUSED(fd);
     // Static callback wrapper
     PipeHandler *handler = static_cast<PipeHandler*>(data);
     if (handler) {

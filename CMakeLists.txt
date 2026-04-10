@@ -65,6 +65,11 @@ target_include_directories(QtGPT PRIVATE
 
 # Target properties
 target_compile_features(QtGPT PRIVATE cxx_std_17)
+if(MSVC)
+    target_compile_options(QtGPT PRIVATE /W4)
+else()
+    target_compile_options(QtGPT PRIVATE -Wall -Wextra -Wpedantic)
+endif()
 
 # Link libraries (order matters)
 target_link_libraries(QtGPT PRIVATE
@@ -72,11 +77,11 @@ target_link_libraries(QtGPT PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
-    /usr/lib/libdisasterparty.so
+    ${DISASTERPARTY_LIBRARY}
+    ${CJSON_LIBRARIES}
+    ${CURL_LIBRARIES}
     dl
     pthread
-    /usr/lib/libcjson.so
-    /usr/lib/libcurl.so
 )
 
 # Install

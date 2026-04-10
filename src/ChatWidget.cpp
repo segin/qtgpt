@@ -241,7 +241,7 @@ void ChatWidget::setThinkingIndicator(bool thinking, bool generating)
 
 void ChatWidget::createMessageWidget(const QString &role, const QString &text, const QString &image_data, int index)
 {
-    QWidget *msgWidget = new QWidget();
+    QWidget *msgWidget = new QWidget(m_messagesContainer);
     msgWidget->setObjectName(role);
     msgWidget->setMaximumWidth(400);
     
@@ -413,6 +413,7 @@ void ChatWidget::renderHistory(const QVector<QMap<QString, QString>> &history)
 
 void ChatWidget::addMessage(const QString &role, const QString &text, const QString &mime_type, const QByteArray &base64_data)
 {
+    Q_UNUSED(mime_type);
     QString base64Str;
     if (!base64_data.isEmpty()) {
         base64Str = QString::fromLatin1(base64_data.toBase64());

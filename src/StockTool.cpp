@@ -4,6 +4,7 @@
 StockTool::StockTool(QObject *parent)
     : Tool("stocks", "Get stock information", "{\"symbol\": {\"type\": \"string\", \"description\": \"The stock symbol\", \"required\": true}}")
 {
+    Q_UNUSED(parent);
     m_api_key = "stock_api_key";
 }
 
@@ -28,6 +29,7 @@ const char *StockTool::parameters_schema() const
 
 QString StockTool::execute(const QString &args_json)
 {
+    Q_UNUSED(args_json);
     // Parse args and fetch stock data
     StockData data;
     data.symbol = "AAPL";
@@ -41,6 +43,7 @@ QString StockTool::execute(const QString &args_json)
 
 StockTool::StockData StockTool::fetchStock(const QString &symbol, const QString &api_key)
 {
+    Q_UNUSED(api_key);
     StockData data;
     data.symbol = symbol;
     data.price = "$150.00";

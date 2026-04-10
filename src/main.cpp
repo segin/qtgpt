@@ -46,10 +46,6 @@ int main(int argc, char *argv[])
     SettingsDialog *settingsDialog = new SettingsDialog(chatWidget);
     qtgpt->setSettingsDialog(settingsDialog);
     
-    // Connect SettingsDialog signals to QtGPT slots
-       QObject::connect(settingsDialog, &SettingsDialog::accepted, qtgpt, &QtGPT::loadSettingsSlot);
-    QObject::connect(settingsDialog, &SettingsDialog::rejected, qtgpt, &QtGPT::discardChangesSlot);
-    
     // Connect MenuBar signals to QtGPT slots
     QObject::connect(menuBar, &MenuBar::openChatRequested, qtgpt, &QtGPT::openConversationSlot);
     QObject::connect(menuBar, &MenuBar::saveChatRequested, qtgpt, &QtGPT::saveConversationSlot);
@@ -87,6 +83,8 @@ int main(int argc, char *argv[])
     
     // Connect SettingsDialog signals to QtGPT methods
     QObject::connect(settingsDialog, &SettingsDialog::SettingsApplied, qtgpt, &QtGPT::loadSettingsSlot);
+    QObject::connect(settingsDialog, &SettingsDialog::accepted, qtgpt, &QtGPT::loadSettingsSlot);
+    QObject::connect(settingsDialog, &SettingsDialog::rejected, qtgpt, &QtGPT::discardChangesSlot);
     QObject::connect(settingsDialog, &SettingsDialog::ProviderChanged, qtgpt, &QtGPT::settingsChanged);
     QObject::connect(settingsDialog, &SettingsDialog::TabChanged, qtgpt, &QtGPT::settingsChanged);
     QObject::connect(qtgpt, &QtGPT::GetModels, settingsDialog, &SettingsDialog::onGeminiLoadModels);
@@ -105,10 +103,6 @@ int main(int argc, char *argv[])
     QObject::connect(chatWidget, &ChatWidget::retryRequested, qtgpt, &QtGPT::retryRequestedSlot);
     QObject::connect(chatWidget, &ChatWidget::editRequested, qtgpt, &QtGPT::editRequestedSlot);
     QObject::connect(chatWidget, &ChatWidget::clearChat, qtgpt, &QtGPT::clearChatSlot);
-    
-    // Connect SettingsDialog signals to QtGPT slots
-    QObject::connect(settingsDialog, &SettingsDialog::accepted, qtgpt, &QtGPT::loadSettingsSlot);
-    QObject::connect(settingsDialog, &SettingsDialog::rejected, qtgpt, &QtGPT::discardChangesSlot);
     
     // Load saved settings
     qtgpt->loadSettingsSlot();
