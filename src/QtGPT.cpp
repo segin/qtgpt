@@ -76,15 +76,18 @@ void QtGPT::initContext()
         base_url = m_openaiBaseUrl;
     }
 
-    m_dpContext = dp_init_context_with_app_info(m_provider, api_key.toUtf8().data(), 
+    m_dpContext = dp_init_context_with_app_info(m_provider, api_key.toUtf8().data(),
                                                  base_url.isEmpty() ? nullptr : base_url.toUtf8().data(),
                                                  "QtGPT", "1.0.0");
+
+    if (m_dpContext) {
+        dp_enable_advanced_features(m_dpContext, DP_FEATURE_THINKING, 0);
+    }
 
     m_mutex.unlock();
 
     if (m_dpContext) {
-        m_pluginManager->loadPlugins(m_pluginDirectory);
-        m_pluginManager->registerBuiltInTools();
+        m_pluginManager->loadPlugins(m_pluginDirectory);        m_pluginManager->registerBuiltInTools();
     }
 }
 
