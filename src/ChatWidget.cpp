@@ -8,6 +8,7 @@
 #include <QScrollArea>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QToolButton>
 #include <QLabel>
 #include <QStatusBar>
 #include <QMap>
@@ -266,15 +267,16 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
     thinkingContainer->setObjectName("thinkingContainer");
     QVBoxLayout *thinkingLayout = new QVBoxLayout(thinkingContainer);
     thinkingLayout->setContentsMargins(0, 0, 0, 0);
-    thinkingLayout->setSpacing(2);
+    thinkingLayout->setSpacing(0);
     
-    QPushButton *thinkingToggle = new QPushButton("Thought", thinkingContainer);
+    QToolButton *thinkingToggle = new QToolButton(thinkingContainer);
     thinkingToggle->setObjectName("thinkingToggle");
+    thinkingToggle->setText("Thought");
     thinkingToggle->setCheckable(true);
     thinkingToggle->setChecked(false);
-    thinkingToggle->setFlat(true);
-    thinkingToggle->setStyleSheet("QPushButton { text-align: left; color: #888; font-style: italic; font-size: 11px; }");
-    thinkingToggle->setIcon(style()->standardIcon(QStyle::SP_TitleBarUnshadeButton));
+    thinkingToggle->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    thinkingToggle->setArrowType(Qt::RightArrow);
+    thinkingToggle->setStyleSheet("QToolButton { border: none; color: #888; font-style: italic; font-size: 11px; padding: 2px; }");
     
     QTextEdit *thinkingTextWidget = new QTextEdit(thinkingContainer);
     thinkingTextWidget->setObjectName("thinkingText");
@@ -283,22 +285,26 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
     thinkingTextWidget->setFrameStyle(QFrame::NoFrame);
     thinkingTextWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     thinkingTextWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    thinkingTextWidget->setStyleSheet("QTextEdit { background: #f9f9f9; border-left: 2px solid #ddd; padding-left: 8px; color: #666; }");
+    thinkingTextWidget->setStyleSheet("QTextEdit { background: #fdfdfd; border-left: 2px solid #eee; padding-left: 8px; color: #777; margin-bottom: 8px; }");
     thinkingTextWidget->setVisible(false);
     
     thinkingLayout->addWidget(thinkingToggle);
     thinkingLayout->addWidget(thinkingTextWidget);
     msgLayout->addWidget(thinkingContainer);
     
-    connect(thinkingToggle, &QPushButton::toggled, this, [thinkingTextWidget, thinkingToggle, this](bool checked) {
+    connect(thinkingToggle, &QToolButton::toggled, this, [thinkingTextWidget, thinkingToggle, this](bool checked) {
         thinkingTextWidget->setVisible(checked);
-        thinkingToggle->setIcon(style()->standardIcon(checked ? QStyle::SP_TitleBarShadeButton : QStyle::SP_TitleBarUnshadeButton));
-        // Recalculate height
+        thinkingToggle->setArrowType(checked ? Qt::DownArrow : Qt::RightArrow);
+        
+        // Ensure parent and message layout update
         if (checked) {
             thinkingTextWidget->document()->setTextWidth(370);
             int docHeight = thinkingTextWidget->document()->size().height();
             thinkingTextWidget->setFixedHeight(docHeight + 10);
         }
+        
+        // Force a layout refresh
+        this->update();
     });
     
     thinkingContainer->setVisible(!thinking.isEmpty());

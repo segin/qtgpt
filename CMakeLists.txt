@@ -14,8 +14,7 @@ find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(CURL REQUIRED libcurl)
-
-find_library(DISASTERPARTY_LIBRARY NAMES disasterparty REQUIRED)
+pkg_check_modules(DP REQUIRED disasterparty)
 
 # Enable auto-MOC
 set(CMAKE_AUTOMOC ON)
@@ -59,8 +58,7 @@ target_include_directories(QtGPT PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CJSON_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
-    /usr/include
-    /usr/include/disasterparty
+    ${DP_INCLUDE_DIRS}
 )
 
 # Target properties
@@ -77,7 +75,7 @@ target_link_libraries(QtGPT PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Network
-    ${DISASTERPARTY_LIBRARY}
+    ${DP_LIBRARIES}
     ${CJSON_LIBRARIES}
     ${CURL_LIBRARIES}
     dl

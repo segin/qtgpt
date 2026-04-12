@@ -93,7 +93,9 @@ int CompletionWorker::streamCallback(const dp_stream_event_t *event, void *user_
         qDebug() << "Stream event type:" << event->event_type << "data:" << (event->raw_json_data ? event->raw_json_data : "null");
         if (event->event_type == DP_EVENT_MESSAGE_STOP) {
             emit worker->streamFinished();
-        } else if (event->event_type == DP_EVENT_CONTENT_BLOCK_DELTA || event->event_type == DP_EVENT_THINKING_DELTA) {
+        } else if (event->event_type == DP_EVENT_CONTENT_BLOCK_DELTA || 
+                   event->event_type == DP_EVENT_THINKING_DELTA ||
+                   event->event_type == DP_EVENT_MESSAGE_DELTA) {
             if (event->raw_json_data) {
                 QJsonDocument doc = QJsonDocument::fromJson(QByteArray(event->raw_json_data));
                 if (doc.isNull() || doc.isEmpty()) {
