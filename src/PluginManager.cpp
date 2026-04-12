@@ -56,6 +56,10 @@ void PluginManager::unloadPlugins()
         delete plugin;
     }
     m_plugins.clear();
+    
+    for (Tool *tool : m_tools) {
+        delete tool;
+    }
     m_tools.clear();
 }
 
