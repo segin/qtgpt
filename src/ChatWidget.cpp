@@ -1,5 +1,6 @@
 #include "ChatWidget.h"
 #include "ChatHistoryViewer.h"
+#include "QtGPT.h"
 #include <QScrollBar>
 #include <QMessageBox>
 #include <QVBoxLayout>
@@ -241,6 +242,13 @@ void ChatWidget::setThinkingIndicator(bool thinking, bool generating)
 
 void ChatWidget::createMessageWidget(const QString &role, const QString &text, const QString &image_data, int index)
 {
+    // Retrieve thinking data if present (passed in history map)
+    QString thinking;
+    QtGPT *qtgpt = QtGPT::instance();
+    if (qtgpt && index >= 0 && index < qtgpt->chatHistory().size()) {
+        thinking = qtgpt->chatHistory()[index].value("thinking", "");
+    }
+
     QWidget *msgWidget = new QWidget(m_messagesContainer);
     msgWidget->setObjectName(role);
     msgWidget->setMaximumWidth(400);
@@ -253,7 +261,50 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
     roleLabel->setStyleSheet("QLabel { color: " + roleColor(role) + "; font-size: 10px; }");
     msgLayout->addWidget(roleLabel, 0, (role == "user") ? Qt::AlignRight : Qt::AlignLeft);
     
-    QTextEdit *textWidget = new QTextEdit();
+    // Thinking block
+    QWidget *thinkingContainer = new QWidget(msgWidget);
+    thinkingContainer->setObjectName("thinkingContainer");
+    QVBoxLayout *thinkingLayout = new QVBoxLayout(thinkingContainer);
+    thinkingLayout->setContentsMargins(0, 0, 0, 0);
+    thinkingLayout->setSpacing(2);
+    
+    QPushButton *thinkingToggle = new QPushButton("Thought", thinkingContainer);
+    thinkingToggle->setObjectName("thinkingToggle");
+    thinkingToggle->setCheckable(true);
+    thinkingToggle->setChecked(false);
+    thinkingToggle->setFlat(true);
+    thinkingToggle->setStyleSheet("QPushButton { text-align: left; color: #888; font-style: italic; font-size: 11px; }");
+    thinkingToggle->setIcon(style()->standardIcon(QStyle::SP_TitleBarUnshadeButton));
+    
+    QTextEdit *thinkingTextWidget = new QTextEdit(thinkingContainer);
+    thinkingTextWidget->setObjectName("thinkingText");
+    thinkingTextWidget->setMarkdown(thinking);
+    thinkingTextWidget->setReadOnly(true);
+    thinkingTextWidget->setFrameStyle(QFrame::NoFrame);
+    thinkingTextWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    thinkingTextWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    thinkingTextWidget->setStyleSheet("QTextEdit { background: #f9f9f9; border-left: 2px solid #ddd; padding-left: 8px; color: #666; }");
+    thinkingTextWidget->setVisible(false);
+    
+    thinkingLayout->addWidget(thinkingToggle);
+    thinkingLayout->addWidget(thinkingTextWidget);
+    msgLayout->addWidget(thinkingContainer);
+    
+    connect(thinkingToggle, &QPushButton::toggled, this, [thinkingTextWidget, thinkingToggle, this](bool checked) {
+        thinkingTextWidget->setVisible(checked);
+        thinkingToggle->setIcon(style()->standardIcon(checked ? QStyle::SP_TitleBarShadeButton : QStyle::SP_TitleBarUnshadeButton));
+        // Recalculate height
+        if (checked) {
+            thinkingTextWidget->document()->setTextWidth(370);
+            int docHeight = thinkingTextWidget->document()->size().height();
+            thinkingTextWidget->setFixedHeight(docHeight + 10);
+        }
+    });
+    
+    thinkingContainer->setVisible(!thinking.isEmpty());
+
+    // Main text content
+    QTextEdit *textWidget = new QTextEdit(msgWidget);
     textWidget->setObjectName("messageText");
     if (role == "user") {
         textWidget->setPlainText(text);
@@ -376,17 +427,37 @@ void ChatWidget::renderHistory(const QVector<QMap<QString, QString>> &history)
     if (history.size() == m_messageWidgets.size() && !history.isEmpty()) {
         const QMap<QString, QString> &msg = history.last();
         QWidget *lastWidget = m_messageWidgets.last();
+        
         QTextEdit *textWidget = lastWidget->findChild<QTextEdit*>("messageText");
-        if (textWidget) {
+        QTextEdit *thinkingTextWidget = lastWidget->findChild<QTextEdit*>("thinkingText");
+        QWidget *thinkingContainer = lastWidget->findChild<QWidget*>("thinkingContainer");
+        
+        if (textWidget && thinkingTextWidget && thinkingContainer) {
             QString text = msg.value("text", "");
+            QString thinking = msg.value("thinking", "");
             QString role = msg.value("role", "");
+            
+            if (!thinking.isEmpty()) {
+                thinkingContainer->setVisible(true);
+                thinkingTextWidget->setMarkdown(thinking);
+                if (thinkingTextWidget->isVisible()) {
+                    thinkingTextWidget->document()->setTextWidth(370);
+                    int thinkHeight = thinkingTextWidget->document()->size().height();
+                    thinkingTextWidget->setFixedHeight(thinkHeight + 10);
+                }
+            } else {
+                thinkingContainer->setVisible(false);
+            }
+
             if (role == "user") {
                 textWidget->setPlainText(text);
             } else {
                 textWidget->setMarkdown(text);
             }
+            textWidget->document()->setTextWidth(380);
             int docHeight = textWidget->document()->size().height();
             textWidget->setFixedHeight(docHeight + 10);
+            
             scrollToBottom();
             return;
         }

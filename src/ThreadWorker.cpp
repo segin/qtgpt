@@ -90,6 +90,7 @@ int CompletionWorker::streamCallback(const dp_stream_event_t *event, void *user_
     }
     
     if (event) {
+        qDebug() << "Stream event type:" << event->event_type << "data:" << (event->raw_json_data ? event->raw_json_data : "null");
         if (event->event_type == DP_EVENT_MESSAGE_STOP) {
             emit worker->streamFinished();
         } else if (event->event_type == DP_EVENT_CONTENT_BLOCK_DELTA || event->event_type == DP_EVENT_THINKING_DELTA) {

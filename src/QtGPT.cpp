@@ -543,11 +543,7 @@ void QtGPT::handleTokenReceived(const QString &token)
 {
     m_mutex.lock();
     m_currentAssistantMessage += token;
-    QString fullMessage = m_currentAssistantMessage;
-    if (!m_currentThinking.isEmpty()) {
-        fullMessage = "> **Thinking...**\n> " + QString(m_currentThinking).replace("\n", "\n> ") + "\n\n" + m_currentAssistantMessage;
-    }
-    m_chatHistory.last()["text"] = fullMessage;
+    m_chatHistory.last()["text"] = m_currentAssistantMessage;
     m_mutex.unlock();
     emit chatMessageAdded();
 }
@@ -556,8 +552,7 @@ void QtGPT::handleThinkingReceived(const QString &token)
 {
     m_mutex.lock();
     m_currentThinking += token;
-    QString fullMessage = "> **Thinking...**\n> " + QString(m_currentThinking).replace("\n", "\n> ") + "\n\n" + m_currentAssistantMessage;
-    m_chatHistory.last()["text"] = fullMessage;
+    m_chatHistory.last()["thinking"] = m_currentThinking;
     m_mutex.unlock();
     emit chatMessageAdded();
 }
