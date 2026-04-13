@@ -38,11 +38,6 @@ ChatWidget::~ChatWidget()
 {
 }
 
-void ChatWidget::setMenuBar(QMenuBar *menuBar)
-{
-    QMainWindow::setMenuBar(menuBar);
-}
-
 void ChatWidget::initUI()
 {
     QWidget *centralWidget = new QWidget(this);
@@ -624,15 +619,3 @@ void ChatWidget::onCopyClicked(const QString &text)
     setStatusBarMessage("Copied to clipboard");
 }
 
-void ChatWidget::show()
-{
-    QWidget::show();
-}
-
-void ChatWidget::close()
-{
-    QWidget::close();
-}
-
-
- 

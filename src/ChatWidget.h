@@ -58,10 +58,6 @@ public:
 
     // UI initialization
     void initUI();
-    void setMenuBar(QMenuBar *menuBar);
-    void show();
-    void hide();
-    void close();
 
 public slots:
     void sendMessage();
