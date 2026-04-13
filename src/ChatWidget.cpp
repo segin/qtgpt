@@ -135,6 +135,34 @@ void ChatWidget::initUI()
     m_sendButton->setFocusPolicy(Qt::ClickFocus);
 }
 
+void ChatWidget::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+    
+    if (!m_scrollArea || !m_scrollArea->viewport()) return;
+    
+    int maxWidth = m_scrollArea->viewport()->width() * 0.85;
+    if (maxWidth < 100) return; // Prevent too small sizes during initial layout
+    
+    for (QWidget *widget : m_messageWidgets) {
+        widget->setMaximumWidth(maxWidth);
+        
+        QTextEdit *textWidget = widget->findChild<QTextEdit*>("messageText");
+        if (textWidget) {
+            textWidget->document()->setTextWidth(maxWidth - 20);
+            int docHeight = textWidget->document()->size().height();
+            textWidget->setFixedHeight(docHeight + 10);
+        }
+        
+        QTextEdit *thinkingTextWidget = widget->findChild<QTextEdit*>("thinkingText");
+        if (thinkingTextWidget && thinkingTextWidget->isVisible()) {
+            thinkingTextWidget->document()->setTextWidth(maxWidth - 20);
+            int docHeight = thinkingTextWidget->document()->size().height();
+            thinkingTextWidget->setFixedHeight(docHeight + 10);
+        }
+    }
+}
+
 bool ChatWidget::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == m_inputWidget && event->type() == QEvent::KeyPress) {
@@ -250,9 +278,11 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
         thinking = qtgpt->chatHistory()[index].value("thinking", "");
     }
 
+    int maxWidth = m_scrollArea->viewport()->width() * 0.85;
+
     QWidget *msgWidget = new QWidget(m_messagesContainer);
     msgWidget->setObjectName(role);
-    msgWidget->setMaximumWidth(400);
+    msgWidget->setMaximumWidth(maxWidth);
     
     QVBoxLayout *msgLayout = new QVBoxLayout(msgWidget);
     msgLayout->setSpacing(2);
@@ -298,7 +328,8 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
         
         // Ensure parent and message layout update
         if (checked) {
-            thinkingTextWidget->document()->setTextWidth(370);
+            int currentMaxWidth = m_scrollArea->viewport()->width() * 0.85;
+            thinkingTextWidget->document()->setTextWidth(currentMaxWidth - 20);
             int docHeight = thinkingTextWidget->document()->size().height();
             thinkingTextWidget->setFixedHeight(docHeight + 10);
         }
@@ -323,7 +354,7 @@ void ChatWidget::createMessageWidget(const QString &role, const QString &text, c
     textWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     
     // Auto-height for text widget
-    textWidget->document()->setTextWidth(380); // max width minus padding
+    textWidget->document()->setTextWidth(maxWidth - 20); // max width minus padding
     int docHeight = textWidget->document()->size().height();
     textWidget->setFixedHeight(docHeight + 10);
     
@@ -429,6 +460,8 @@ QString ChatWidget::roleColor(const QString &role)
 
 void ChatWidget::renderHistory(const QVector<QMap<QString, QString>> &history)
 {
+    int maxWidth = m_scrollArea->viewport()->width() * 0.85;
+
     // Fast path for streaming updates
     if (history.size() == m_messageWidgets.size() && !history.isEmpty()) {
         const QMap<QString, QString> &msg = history.last();
@@ -443,11 +476,13 @@ void ChatWidget::renderHistory(const QVector<QMap<QString, QString>> &history)
             QString thinking = msg.value("thinking", "");
             QString role = msg.value("role", "");
             
+            lastWidget->setMaximumWidth(maxWidth);
+
             if (!thinking.isEmpty()) {
                 thinkingContainer->setVisible(true);
                 thinkingTextWidget->setMarkdown(thinking);
                 if (thinkingTextWidget->isVisible()) {
-                    thinkingTextWidget->document()->setTextWidth(370);
+                    thinkingTextWidget->document()->setTextWidth(maxWidth - 20);
                     int thinkHeight = thinkingTextWidget->document()->size().height();
                     thinkingTextWidget->setFixedHeight(thinkHeight + 10);
                 }
@@ -460,7 +495,7 @@ void ChatWidget::renderHistory(const QVector<QMap<QString, QString>> &history)
             } else {
                 textWidget->setMarkdown(text);
             }
-            textWidget->document()->setTextWidth(380);
+            textWidget->document()->setTextWidth(maxWidth - 20);
             int docHeight = textWidget->document()->size().height();
             textWidget->setFixedHeight(docHeight + 10);
             
